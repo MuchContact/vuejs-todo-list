@@ -6,9 +6,9 @@ Vue.component("todo-list", {
   template: "#todo-list-template",
   data: function () {
     return {
+      backendUri: "https://immense-hamlet-88968.herokuapp.com/",
       newTask: "",
-      tasks: [
-      ],
+      tasks: [],
       defaultSortBy: ["priority", "created"],
       defaultSortOrder: ["asc", "desc"],
       defaultTaskPriority: 2 // 1: high, 2: normal. 3: low
@@ -27,7 +27,7 @@ Vue.component("todo-list", {
       task.updated = Date.now();
       task.priority = priority;
 
-      this.$http.put('http://localhost:3000/todos/'+task._id, task).then(function (response) {
+      this.$http.put(this.backendUri + task._id, task).then(function (response) {
         this.sortTasks(this.defaultSortBy, this.defaultSortOrder);
         this.setData("todoData", this.tasks);
       }, function (response) {
@@ -42,7 +42,7 @@ Vue.component("todo-list", {
       task.updated = Date.now();
       task.completed = !task.completed;
 
-      this.$http.put('http://localhost:3000/todos/'+task._id, task).then(function (response) {
+      this.$http.put(this.backendUri + task._id, task).then(function (response) {
         this.setData("todoData", this.tasks);
       }, function (response) {
         task.updated = originUpdateTime;
@@ -55,7 +55,7 @@ Vue.component("todo-list", {
       this.tasks = _.orderBy(this.tasks, sortBy, sortOrder);
     },
     deleteTodo: function (task) {
-      this.$http.delete('http://localhost:3000/todos/'+task._id).then(function (response) {
+      this.$http.delete(this.backendUri + task._id).then(function (response) {
         task.updated = Date.now();
         this.tasks.splice(this.tasks.indexOf(task), 1);
         this.setData("todoData", this.tasks);
@@ -73,7 +73,7 @@ Vue.component("todo-list", {
           completed: false
         };
 
-        this.$http.post('http://localhost:3000/todos', task).then(function (response) {
+        this.$http.post(this.backendUri, task).then(function (response) {
           this.tasks.push(task);
           this.sortTasks(this.defaultSortBy, this.defaultSortOrder);
           this.$nextTick(function () {
@@ -113,7 +113,7 @@ Vue.component("todo-list", {
     },
     initApp: function () {
       localStorage.clear();
-      this.$http.get('http://localhost:3000/todos').then(function (response) {
+      this.$http.get(this.backendUri).then(function (response) {
         this.tasks = response.body;
         this.sortTasks(this.defaultSortBy, this.defaultSortOrder);
         this.setData("todoData", this.tasks);
