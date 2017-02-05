@@ -42,17 +42,25 @@ Vue.component("todo-list", {
     },
     addTodo: function () {
       if (this.newTask.trim().length) {
-        this.tasks.push({
+        var task = {
           task: this.newTask,
           priority: this.defaultTaskPriority,
           created: Date.now(),
           completed: false
+        };
+
+        this.$http.post('http://localhost:3000/todos', task).then(function (response) {
+          this.tasks.push(task);
+          this.sortTasks(this.defaultSortBy, this.defaultSortOrder);
+          this.$nextTick(function () {
+            new timeago().render(document.querySelectorAll(".timeago"));
+          });
+          this.newTask = "";
+          this.setData("todoData", this.tasks);
+        }, function (response) {
+          alert("create task failed");
         });
-        this.$nextTick(function () {
-          new timeago().render(document.querySelectorAll(".timeago"));
-        });
-        this.newTask = "";
-        this.setData("todoData", this.tasks);
+
       } else {
         this.newTask = "";
       }
