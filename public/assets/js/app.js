@@ -36,9 +36,14 @@ Vue.component("todo-list", {
       this.tasks = _.orderBy(this.tasks, sortBy, sortOrder);
     },
     deleteTodo: function (task) {
-      task.updated = Date.now();
-      this.tasks.splice(this.tasks.indexOf(task), 1);
-      this.setData("todoData", this.tasks);
+      this.$http.delete('http://localhost:3000/todos/'+task._id).then(function (response) {
+        task.updated = Date.now();
+        this.tasks.splice(this.tasks.indexOf(task), 1);
+        this.setData("todoData", this.tasks);
+      }, function (response) {
+        alert("delete task failed");
+      });
+
     },
     addTodo: function () {
       if (this.newTask.trim().length) {
