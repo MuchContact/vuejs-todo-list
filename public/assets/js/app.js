@@ -22,15 +22,34 @@ Vue.component("todo-list", {
   },
   methods: {
     togglePriority: function (task, priority) {
+      var originUpdateTime = task.updated;
+      var originPriority = task.priority;
       task.updated = Date.now();
       task.priority = priority;
-      this.sortTasks(this.defaultSortBy, this.defaultSortOrder);
-      this.setData("todoData", this.tasks);
+
+      this.$http.put('http://localhost:3000/todos/'+task._id, task).then(function (response) {
+        this.sortTasks(this.defaultSortBy, this.defaultSortOrder);
+        this.setData("todoData", this.tasks);
+      }, function (response) {
+        task.updated = originUpdateTime;
+        task.priority = originPriority;
+        alert("update task failed");
+      });
+
     },
     toggleTodoStatus: function (task) {
+      var originUpdateTime = task.updated;
       task.updated = Date.now();
       task.completed = !task.completed;
-      this.setData("todoData", this.tasks);
+
+      this.$http.put('http://localhost:3000/todos/'+task._id, task).then(function (response) {
+        this.setData("todoData", this.tasks);
+      }, function (response) {
+        task.updated = originUpdateTime;
+        task.completed = !task.completed;
+        alert("update task failed");
+      });
+
     },
     sortTasks: function (sortBy, sortOrder) {
       this.tasks = _.orderBy(this.tasks, sortBy, sortOrder);
