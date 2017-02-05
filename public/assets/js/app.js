@@ -6,7 +6,7 @@ Vue.component("todo-list", {
   template: "#todo-list-template",
   data: function () {
     return {
-      backendUri: "https://immense-hamlet-88968.herokuapp.com/",
+      backendUri: "https://immense-hamlet-88968.herokuapp.com/todos/",
       newTask: "",
       tasks: [],
       defaultSortBy: ["priority", "created"],
