@@ -152,7 +152,7 @@
 	exports.default = {
 	  data: function data() {
 	    return {
-	      backendUri: "http://localhost:3000/todos/",
+	      backendUri: "https://immense-hamlet-88968.herokuapp.com/todos/",
 	      newTask: "",
 	      tasks: [],
 	      defaultSortBy: ["priority", "created"],
