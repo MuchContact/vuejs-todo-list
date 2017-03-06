@@ -11,29 +11,32 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.5.2/animate.min.css" integrity="sha256-j+P6EZJVrbXgwSR5Mx+eCS6FvP9Wq27MBRC/ogVriY0=" crossorigin="anonymous" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha256-eZrrJcwDc/3uDhsdt61sL2oOBY362qM3lon1gyExkL0=" crossorigin="anonymous" />
     <link rel="stylesheet" href="assets/css/styles.css">
+    <script src="https://cdn.bootcss.com/jquery/1.12.4/jquery.min.js"></script>
+    <!-- 最新的 Bootstrap 核心 JavaScript 文件 -->
+    <script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <!--[if lt IE 9]>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.min.js" integrity="sha256-3Jy/GbSLrg0o9y5Z5n1uw0qxZECH7C6OQpVBgNFYa0g=" crossorigin="anonymous"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/respond.js/1.4.2/respond.min.js" integrity="sha256-g6iAfvZp+nDQ2TdTR/VVKJf3bGro4ub5fvWSWVRi2NE=" crossorigin="anonymous"></script>
     <![endif]-->
   </head>
   <body>
+    <div id="appPage"></div>
+    <!--<header class="container page-header">-->
+      <!--<h1>Simple Vue.js To-do List App</h1>-->
+      <!--<p class="lead">-->
+        <!--Type text below and hit enter key to add new tasks. Click priority label on task to change it. Tasks sort by priority and when created.-->
+        <!--<br>-->
+        <!--<small> Demo uses browser's local storage - task list will persist between visits unless browser's cache is cleared.</small>-->
+      <!--</p>-->
+    <!--</header>-->
 
-    <header class="container page-header">
-      <h1>Simple Vue.js To-do List App</h1>
-      <p class="lead">
-        Type text below and hit enter key to add new tasks. Click priority label on task to change it. Tasks sort by priority and when created.
-        <br>
-        <small> Demo uses browser's local storage - task list will persist between visits unless browser's cache is cleared.</small>
-      </p>
-    </header>
-
-    <div class="container" id="app">
-      <div class="row">
-        <div class="col-sm-12">
-          <todo-list></todo-list>
-        </div>
-      </div>
-    </div>
+    <!--<div class="container" id="app">-->
+      <!--<div class="row">-->
+        <!--<div class="col-sm-12">-->
+          <!--<todo-list></todo-list>-->
+        <!--</div>-->
+      <!--</div>-->
+    <!--</div>-->
 
     <footer class="footer">
       <div class="container">
@@ -45,11 +48,11 @@
       </div>
     </footer>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.1.6/vue.js" integrity="sha256-MbKnwYm5PqnQ9xLd0vK2C8vDJZA+PXKuNlmgJc+BG48=" crossorigin="anonymous"></script>
+    <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.1.6/vue.js" integrity="sha256-MbKnwYm5PqnQ9xLd0vK2C8vDJZA+PXKuNlmgJc+BG48=" crossorigin="anonymous"></script>-->
     <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.1.6/vue.min.js" integrity="sha256-WcJDyxpvFLMHHA7kQuvbE5kWgRwV3zukWdjvbTUcXh8=" crossorigin="anonymous"></script> -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.2/lodash.min.js" integrity="sha256-Cv5v4i4SuYvwRYzIONifZjoc99CkwfncROMSWat1cVA=" crossorigin="anonymous"></script>
+    <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.2/lodash.min.js" integrity="sha256-Cv5v4i4SuYvwRYzIONifZjoc99CkwfncROMSWat1cVA=" crossorigin="anonymous"></script>-->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/timeago.js/2.0.4/timeago.min.js" integrity="sha256-34otvl+f6DWlliQUlAwT5hvizEJc8lPlNpW9T23pfGA=" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue-resource/1.2.0/vue-resource.min.js"></script>
+    <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/vue-resource/1.2.0/vue-resource.min.js"></script>-->
     <!-- <script src="https://www.gstatic.com/firebasejs/3.4.0/firebase.js"></script>
     <script src="assets/js/config.js"></script> -->
     <script src="../build/build.js"></script>
