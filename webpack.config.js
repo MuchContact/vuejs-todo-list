@@ -1,6 +1,6 @@
 module.exports = {
   // the main entry of our app
-  entry: ['./public/assets/js/app.js'],
+  entry: ['./public/assets/js/index.js'],
   // output configuration
   output: {
     path: __dirname + '/build/',
