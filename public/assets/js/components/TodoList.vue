@@ -40,6 +40,8 @@
 </template>
 
 <script>
+import _ from 'lodash'
+
 export default {
   data: function () {
       return {
@@ -64,10 +66,10 @@ export default {
         task.updated = Date.now();
         task.priority = priority;
 
-        this.$http.put(this.backendUri + task._id, task).then(function (response) {
+        this.$http.put(this.backendUri + task._id, task, response => {
           this.sortTasks(this.defaultSortBy, this.defaultSortOrder);
           this.setData("todoData", this.tasks);
-        }, function (response) {
+        }).error(err => {
           task.updated = originUpdateTime;
           task.priority = originPriority;
           alert("update task failed");
@@ -79,9 +81,9 @@ export default {
         task.updated = Date.now();
         task.completed = !task.completed;
 
-        this.$http.put(this.backendUri + task._id, task).then(function (response) {
+        this.$http.put(this.backendUri + task._id, task, (response) => {
           this.setData("todoData", this.tasks);
-        }, function (response) {
+        }).error((err) => {
           task.updated = originUpdateTime;
           task.completed = !task.completed;
           alert("update task failed");
@@ -92,11 +94,11 @@ export default {
         this.tasks = _.orderBy(this.tasks, sortBy, sortOrder);
       },
       deleteTodo: function (task) {
-        this.$http.delete(this.backendUri + task._id).then(function (response) {
+        this.$http.delete(this.backendUri + task._id, (response) => {
           task.updated = Date.now();
           this.tasks.splice(this.tasks.indexOf(task), 1);
           this.setData("todoData", this.tasks);
-        }, function (response) {
+        }).error((err) => {
           alert("delete task failed");
         });
 
@@ -110,7 +112,7 @@ export default {
             completed: false
           };
 
-          this.$http.post(this.backendUri, task).then(function (response) {
+          this.$http.post(this.backendUri, task, response => {
             this.tasks.push(task);
             this.sortTasks(this.defaultSortBy, this.defaultSortOrder);
             this.$nextTick(function () {
@@ -118,7 +120,7 @@ export default {
             });
             this.newTask = "";
             this.setData("todoData", this.tasks);
-          }, function (response) {
+          }).error( err => {
             alert("create task failed");
           });
 
@@ -150,15 +152,13 @@ export default {
       },
       initApp: function () {
         localStorage.clear();
-        this.$http.get(this.backendUri).then(function (response) {
-          this.tasks = response.body;
+        this.$http.get(this.backendUri, data => {
+          this.tasks = data;
           this.sortTasks(this.defaultSortBy, this.defaultSortOrder);
           this.setData("todoData", this.tasks);
           new timeago().render(document.querySelectorAll(".timeago"));
 
-        }, function (response) {
-          // error callback
-        });
+        }).error( err => console.log(err));
       }
     },
     computed: {

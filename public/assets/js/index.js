@@ -12,8 +12,6 @@ Vue.filter("timeago", function (date) {
   return new timeago().format(date);
 });
 
-// Vue.component("todo-list", TodoList);
-
 export var router = new VueRouter()
 
 router.map({
