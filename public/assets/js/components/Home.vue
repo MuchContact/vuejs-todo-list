@@ -8,7 +8,12 @@
           <small> Demo uses browser's local storage - task list will persist between visits unless browser's cache is cleared.</small>
         </p>
       </div>
-      <div class="row">
+      <div class="container" v-if="!user.authenticated">
+        <h2>
+          Not Login yet. Please <a v-link="'login'">Login in</a>.
+        </h2>
+      </div>
+      <div class="row" v-if="user.authenticated">
         <div class="col-sm-12">
           <todo-list></todo-list>
         </div>
@@ -17,8 +22,20 @@
 </template>
 
 <script>
-import TODO from './TodoList.vue'
 import Vue from 'vue'
+import TODO from './TodoList.vue'
+import auth from '../auth'
 
 Vue.component("todo-list", TODO);
+
+export default {
+  data() {
+    return {
+      user: auth.user
+    }
+  },
+
+  methods: {
+  }
+}
 </script>
