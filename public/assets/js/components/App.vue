@@ -16,13 +16,14 @@
         <!-- Collect the nav links, forms, and other content for toggling -->
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
           <ul class="nav navbar-nav navbar-right">
-            <li><a href="#">Login</a></li>
-            <li><a href="#">Sign up</a></li>
-            <li class="dropdown">
+            <li><a v-link="'home'">Home</a></li>
+            <li><a v-link="'login'" v-if="!user.authenticated">Login</a></li>
+            <li><a v-link="'signup'" v-if="!user.authenticated">Sign up</a></li>
+            <li class="dropdown" v-if="user.authenticated">
               <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Username<span class="caret"></span></a>
               <ul class="dropdown-menu">
                 <li><a href="#">Profile</a></li>
-                <li><a href="#">Logout</a></li>
+                <li><a href="#" @click="logout()">Logout</a></li>
               </ul>
             </li>
           </ul>
@@ -34,5 +35,19 @@
 </template>
 
 <script>
+import auth from '../auth'
 
+export default {
+  data() {
+    return {
+      user: auth.user
+    }
+  },
+
+  methods: {
+    logout() {
+      auth.logout()
+    }
+  }
+}
 </script>
