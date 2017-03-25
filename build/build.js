@@ -70,17 +70,24 @@
 
 	var _vueResource2 = _interopRequireDefault(_vueResource);
 
-	var _Home = __webpack_require__(13);
+	var _Home = __webpack_require__(6);
 
 	var _Home2 = _interopRequireDefault(_Home);
 
-	var _App = __webpack_require__(24);
+	var _App = __webpack_require__(18);
 
 	var _App2 = _interopRequireDefault(_App);
 
+	var _Login = __webpack_require__(21);
+
+	var _Login2 = _interopRequireDefault(_Login);
+
+	var _auth = __webpack_require__(15);
+
+	var _auth2 = _interopRequireDefault(_auth);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-	// import TodoList from './components/TodoList.vue'
 	_vue2.default.use(_vueRouter2.default);
 	_vue2.default.use(_vueResource2.default);
 
@@ -88,11 +95,24 @@
 	  return new timeago().format(date);
 	});
 
+	_vue2.default.http.interceptors.push(function (request, next) {
+	  request.credentials = true;
+	  next();
+	});
+
+	_auth2.default.checkAuth();
+
 	var router = exports.router = new _vueRouter2.default();
 
 	router.map({
 	  '/home': {
 	    component: _Home2.default
+	  },
+	  '/login': {
+	    component: _Login2.default
+	  },
+	  '/signup': {
+	    component: _Login2.default
 	  }
 	});
 
@@ -13248,534 +13268,25 @@
 
 /***/ },
 /* 5 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/**
-	 * Install plugin.
-	 */
-
-	function install(Vue) {
-
-	    var _ = __webpack_require__(6)(Vue);
-
-	    Vue.url = __webpack_require__(7)(_);
-	    Vue.http = __webpack_require__(8)(_);
-	    Vue.resource = __webpack_require__(12)(_);
-
-	    Object.defineProperties(Vue.prototype, {
-
-	        $url: {
-	            get: function () {
-	                return _.options(Vue.url, this, this.$options.url);
-	            }
-	        },
-
-	        $http: {
-	            get: function () {
-	                return _.options(Vue.http, this, this.$options.http);
-	            }
-	        },
-
-	        $resource: {
-	            get: function () {
-	                return Vue.resource.bind(this);
-	            }
-	        }
-
-	    });
-	}
-
-	if (window.Vue) {
-	    Vue.use(install);
-	}
-
-	module.exports = install;
-
-/***/ },
-/* 6 */
 /***/ function(module, exports) {
 
-	/**
-	 * Utility functions.
+	/*!
+	 * vue-resource v0.9.3
+	 * https://github.com/vuejs/vue-resource
+	 * Released under the MIT License.
 	 */
 
-	module.exports = function (Vue) {
-
-	    var _ = Vue.util.extend({}, Vue.util);
-
-	    _.isString = function (value) {
-	        return typeof value === 'string';
-	    };
-
-	    _.isFunction = function (value) {
-	        return typeof value === 'function';
-	    };
-
-	    _.options = function (fn, obj, options) {
-
-	        options = options || {};
-
-	        if (_.isFunction(options)) {
-	            options = options.call(obj);
-	        }
-
-	        return _.extend(fn.bind({vm: obj, options: options}), fn, {options: options});
-	    };
-
-	    _.each = function (obj, iterator) {
-
-	        var i, key;
-
-	        if (typeof obj.length == 'number') {
-	            for (i = 0; i < obj.length; i++) {
-	                iterator.call(obj[i], obj[i], i);
-	            }
-	        } else if (_.isObject(obj)) {
-	            for (key in obj) {
-	                if (obj.hasOwnProperty(key)) {
-	                    iterator.call(obj[key], obj[key], key);
-	                }
-	            }
-	        }
-
-	        return obj;
-	    };
-
-	    _.extend = function (target) {
-
-	        var array = [], args = array.slice.call(arguments, 1), deep;
-
-	        if (typeof target == 'boolean') {
-	            deep = target;
-	            target = args.shift();
-	        }
-
-	        args.forEach(function (arg) {
-	            extend(target, arg, deep);
-	        });
-
-	        return target;
-	    };
-
-	    function extend(target, source, deep) {
-	        for (var key in source) {
-	            if (deep && (_.isPlainObject(source[key]) || _.isArray(source[key]))) {
-	                if (_.isPlainObject(source[key]) && !_.isPlainObject(target[key])) {
-	                    target[key] = {};
-	                }
-	                if (_.isArray(source[key]) && !_.isArray(target[key])) {
-	                    target[key] = [];
-	                }
-	                extend(target[key], source[key], deep);
-	            } else if (source[key] !== undefined) {
-	                target[key] = source[key];
-	            }
-	        }
-	    }
-
-	    return _;
-	};
-
-
-/***/ },
-/* 7 */
-/***/ function(module, exports) {
+	'use strict';
 
 	/**
-	 * Service for URL templating.
-	 */
-
-	var ie = document.documentMode;
-	var el = document.createElement('a');
-
-	module.exports = function (_) {
-
-	    function Url(url, params) {
-
-	        var urlParams = {}, queryParams = {}, options = url, query;
-
-	        if (!_.isPlainObject(options)) {
-	            options = {url: url, params: params};
-	        }
-
-	        options = _.extend(true, {},
-	            Url.options, this.options, options
-	        );
-
-	        url = options.url.replace(/(\/?):([a-z]\w*)/gi, function (match, slash, name) {
-
-	            if (options.params[name]) {
-	                urlParams[name] = true;
-	                return slash + encodeUriSegment(options.params[name]);
-	            }
-
-	            return '';
-	        });
-
-	        if (_.isString(options.root) && !url.match(/^(https?:)?\//)) {
-	            url = options.root + '/' + url;
-	        }
-
-	        _.each(options.params, function (value, key) {
-	            if (!urlParams[key]) {
-	                queryParams[key] = value;
-	            }
-	        });
-
-	        query = Url.params(queryParams);
-
-	        if (query) {
-	            url += (url.indexOf('?') == -1 ? '?' : '&') + query;
-	        }
-
-	        return url;
-	    }
-
-	    /**
-	     * Url options.
-	     */
-
-	    Url.options = {
-	        url: '',
-	        root: null,
-	        params: {}
-	    };
-
-	    /**
-	     * Encodes a Url parameter string.
-	     *
-	     * @param {Object} obj
-	     */
-
-	    Url.params = function (obj) {
-
-	        var params = [];
-
-	        params.add = function (key, value) {
-
-	            if (_.isFunction (value)) {
-	                value = value();
-	            }
-
-	            if (value === null) {
-	                value = '';
-	            }
-
-	            this.push(encodeUriSegment(key) + '=' + encodeUriSegment(value));
-	        };
-
-	        serialize(params, obj);
-
-	        return params.join('&');
-	    };
-
-	    /**
-	     * Parse a URL and return its components.
-	     *
-	     * @param {String} url
-	     */
-
-	    Url.parse = function (url) {
-
-	        if (ie) {
-	            el.href = url;
-	            url = el.href;
-	        }
-
-	        el.href = url;
-
-	        return {
-	            href: el.href,
-	            protocol: el.protocol ? el.protocol.replace(/:$/, '') : '',
-	            port: el.port,
-	            host: el.host,
-	            hostname: el.hostname,
-	            pathname: el.pathname.charAt(0) === '/' ? el.pathname : '/' + el.pathname,
-	            search: el.search ? el.search.replace(/^\?/, '') : '',
-	            hash: el.hash ? el.hash.replace(/^#/, '') : ''
-	        };
-	    };
-
-	    function serialize(params, obj, scope) {
-
-	        var array = _.isArray(obj), plain = _.isPlainObject(obj), hash;
-
-	        _.each(obj, function (value, key) {
-
-	            hash = _.isObject(value) || _.isArray(value);
-
-	            if (scope) {
-	                key = scope + '[' + (plain || hash ? key : '') + ']';
-	            }
-
-	            if (!scope && array) {
-	                params.add(value.name, value.value);
-	            } else if (hash) {
-	                serialize(params, value, key);
-	            } else {
-	                params.add(key, value);
-	            }
-	        });
-	    }
-
-	    function encodeUriSegment(value) {
-
-	        return encodeUriQuery(value, true).
-	            replace(/%26/gi, '&').
-	            replace(/%3D/gi, '=').
-	            replace(/%2B/gi, '+');
-	    }
-
-	    function encodeUriQuery(value, spaces) {
-
-	        return encodeURIComponent(value).
-	            replace(/%40/gi, '@').
-	            replace(/%3A/gi, ':').
-	            replace(/%24/g, '$').
-	            replace(/%2C/gi, ',').
-	            replace(/%20/g, (spaces ? '%20' : '+'));
-	    }
-
-	    return _.url = Url;
-	};
-
-
-/***/ },
-/* 8 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/**
-	 * Service for sending network requests.
-	 */
-
-	var xhr = __webpack_require__(9);
-	var jsonp = __webpack_require__(11);
-	var Promise = __webpack_require__(10);
-
-	module.exports = function (_) {
-
-	    var originUrl = _.url.parse(location.href);
-	    var jsonType = {'Content-Type': 'application/json;charset=utf-8'};
-
-	    function Http(url, options) {
-
-	        var promise;
-
-	        if (_.isPlainObject(url)) {
-	            options = url;
-	            url = '';
-	        }
-
-	        options = _.extend({url: url}, options);
-	        options = _.extend(true, {},
-	            Http.options, this.options, options
-	        );
-
-	        if (options.crossOrigin === null) {
-	            options.crossOrigin = crossOrigin(options.url);
-	        }
-
-	        options.method = options.method.toUpperCase();
-	        options.headers = _.extend({}, Http.headers.common,
-	            !options.crossOrigin ? Http.headers.custom : {},
-	            Http.headers[options.method.toLowerCase()],
-	            options.headers
-	        );
-
-	        if (_.isPlainObject(options.data) && /^(GET|JSONP)$/i.test(options.method)) {
-	            _.extend(options.params, options.data);
-	            delete options.data;
-	        }
-
-	        if (options.emulateHTTP && !options.crossOrigin && /^(PUT|PATCH|DELETE)$/i.test(options.method)) {
-	            options.headers['X-HTTP-Method-Override'] = options.method;
-	            options.method = 'POST';
-	        }
-
-	        if (options.emulateJSON && _.isPlainObject(options.data)) {
-	            options.headers['Content-Type'] = 'application/x-www-form-urlencoded';
-	            options.data = _.url.params(options.data);
-	        }
-
-	        if (_.isObject(options.data) && /FormData/i.test(options.data.toString())) {
-	            delete options.headers['Content-Type'];
-	        }
-
-	        if (_.isPlainObject(options.data)) {
-	            options.data = JSON.stringify(options.data);
-	        }
-
-	        promise = (options.method == 'JSONP' ? jsonp : xhr).call(this.vm, _, options);
-	        promise = extendPromise(promise.then(transformResponse, transformResponse), this.vm);
-
-	        if (options.success) {
-	            promise = promise.success(options.success);
-	        }
-
-	        if (options.error) {
-	            promise = promise.error(options.error);
-	        }
-
-	        return promise;
-	    }
-
-	    function extendPromise(promise, vm) {
-
-	        promise.success = function (fn) {
-
-	            return extendPromise(promise.then(function (response) {
-	                return fn.call(vm, response.data, response.status, response) || response;
-	            }), vm);
-
-	        };
-
-	        promise.error = function (fn) {
-
-	            return extendPromise(promise.then(undefined, function (response) {
-	                return fn.call(vm, response.data, response.status, response) || response;
-	            }), vm);
-
-	        };
-
-	        promise.always = function (fn) {
-
-	            var cb = function (response) {
-	                return fn.call(vm, response.data, response.status, response) || response;
-	            };
-
-	            return extendPromise(promise.then(cb, cb), vm);
-	        };
-
-	        return promise;
-	    }
-
-	    function transformResponse(response) {
-
-	        try {
-	            response.data = JSON.parse(response.responseText);
-	        } catch (e) {
-	            response.data = response.responseText;
-	        }
-
-	        return response.ok ? response : Promise.reject(response);
-	    }
-
-	    function crossOrigin(url) {
-
-	        var requestUrl = _.url.parse(url);
-
-	        return (requestUrl.protocol !== originUrl.protocol || requestUrl.host !== originUrl.host);
-	    }
-
-	    Http.options = {
-	        method: 'get',
-	        params: {},
-	        data: '',
-	        xhr: null,
-	        jsonp: 'callback',
-	        beforeSend: null,
-	        crossOrigin: null,
-	        emulateHTTP: false,
-	        emulateJSON: false
-	    };
-
-	    Http.headers = {
-	        put: jsonType,
-	        post: jsonType,
-	        patch: jsonType,
-	        delete: jsonType,
-	        common: {'Accept': 'application/json, text/plain, */*'},
-	        custom: {'X-Requested-With': 'XMLHttpRequest'}
-	    };
-
-	    ['get', 'put', 'post', 'patch', 'delete', 'jsonp'].forEach(function (method) {
-
-	        Http[method] = function (url, data, success, options) {
-
-	            if (_.isFunction(data)) {
-	                options = success;
-	                success = data;
-	                data = undefined;
-	            }
-
-	            return this(url, _.extend({method: method, data: data, success: success}, options));
-	        };
-	    });
-
-	    return _.http = Http;
-	};
-
-
-/***/ },
-/* 9 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/**
-	 * XMLHttp request.
-	 */
-
-	var Promise = __webpack_require__(10);
-	var XDomain = window.XDomainRequest;
-
-	module.exports = function (_, options) {
-
-	    var request = new XMLHttpRequest(), promise;
-
-	    if (XDomain && options.crossOrigin) {
-	        request = new XDomainRequest(); options.headers = {};
-	    }
-
-	    if (_.isPlainObject(options.xhr)) {
-	        _.extend(request, options.xhr);
-	    }
-
-	    if (_.isFunction(options.beforeSend)) {
-	        options.beforeSend.call(this, request, options);
-	    }
-
-	    promise = new Promise(function (resolve, reject) {
-
-	        request.open(options.method, _.url(options), true);
-
-	        _.each(options.headers, function (value, header) {
-	            request.setRequestHeader(header, value);
-	        });
-
-	        var handler = function (event) {
-
-	            request.ok = event.type === 'load';
-
-	            if (request.ok && request.status) {
-	                request.ok = request.status >= 200 && request.status < 300;
-	            }
-
-	            (request.ok ? resolve : reject)(request);
-	        };
-
-	        request.onload = handler;
-	        request.onabort = handler;
-	        request.onerror = handler;
-
-	        request.send(options.data);
-	    });
-
-	    return promise;
-	};
-
-
-/***/ },
-/* 10 */
-/***/ function(module, exports) {
-
-	/**
-	 * Promises/A+ polyfill v1.1.0 (https://github.com/bramstein/promis)
+	 * Promises/A+ polyfill v1.1.4 (https://github.com/bramstein/promis)
 	 */
 
 	var RESOLVED = 0;
 	var REJECTED = 1;
-	var PENDING  = 2;
+	var PENDING = 2;
 
-	function Promise(executor) {
+	function Promise$2(executor) {
 
 	    this.state = PENDING;
 	    this.value = undefined;
@@ -13794,20 +13305,20 @@
 	    }
 	}
 
-	Promise.reject = function (r) {
-	    return new Promise(function (resolve, reject) {
+	Promise$2.reject = function (r) {
+	    return new Promise$2(function (resolve, reject) {
 	        reject(r);
 	    });
 	};
 
-	Promise.resolve = function (x) {
-	    return new Promise(function (resolve, reject) {
+	Promise$2.resolve = function (x) {
+	    return new Promise$2(function (resolve, reject) {
 	        resolve(x);
 	    });
 	};
 
-	Promise.all = function all(iterable) {
-	    return new Promise(function (resolve, reject) {
+	Promise$2.all = function all(iterable) {
+	    return new Promise$2(function (resolve, reject) {
 	        var count = 0,
 	            result = [];
 
@@ -13827,22 +13338,22 @@
 	        }
 
 	        for (var i = 0; i < iterable.length; i += 1) {
-	            iterable[i].then(resolver(i), reject);
+	            Promise$2.resolve(iterable[i]).then(resolver(i), reject);
 	        }
 	    });
 	};
 
-	Promise.race = function race(iterable) {
-	    return new Promise(function (resolve, reject) {
+	Promise$2.race = function race(iterable) {
+	    return new Promise$2(function (resolve, reject) {
 	        for (var i = 0; i < iterable.length; i += 1) {
-	            iterable[i].then(resolve, reject);
+	            Promise$2.resolve(iterable[i]).then(resolve, reject);
 	        }
 	    });
 	};
 
-	var p = Promise.prototype;
+	var p$1 = Promise$2.prototype;
 
-	p.resolve = function resolve(x) {
+	p$1.resolve = function resolve(x) {
 	    var promise = this;
 
 	    if (promise.state === PENDING) {
@@ -13861,7 +13372,6 @@
 	                        promise.resolve(x);
 	                    }
 	                    called = true;
-
 	                }, function (r) {
 	                    if (!called) {
 	                        promise.reject(r);
@@ -13876,13 +13386,14 @@
 	            }
 	            return;
 	        }
+
 	        promise.state = RESOLVED;
 	        promise.value = x;
 	        promise.notify();
 	    }
 	};
 
-	p.reject = function reject(reason) {
+	p$1.reject = function reject(reason) {
 	    var promise = this;
 
 	    if (promise.state === PENDING) {
@@ -13896,10 +13407,10 @@
 	    }
 	};
 
-	p.notify = function notify() {
+	p$1.notify = function notify() {
 	    var promise = this;
 
-	    async(function () {
+	    nextTick(function () {
 	        if (promise.state !== PENDING) {
 	            while (promise.deferred.length) {
 	                var deferred = promise.deferred.shift(),
@@ -13930,235 +13441,1155 @@
 	    });
 	};
 
-	p.catch = function (onRejected) {
-	    return this.then(undefined, onRejected);
-	};
-
-	p.then = function then(onResolved, onRejected) {
+	p$1.then = function then(onResolved, onRejected) {
 	    var promise = this;
 
-	    return new Promise(function (resolve, reject) {
+	    return new Promise$2(function (resolve, reject) {
 	        promise.deferred.push([onResolved, onRejected, resolve, reject]);
 	        promise.notify();
 	    });
 	};
 
-	var queue = [];
-	var async = function (callback) {
-	    queue.push(callback);
-
-	    if (queue.length === 1) {
-	        async.async();
-	    }
+	p$1.catch = function (onRejected) {
+	    return this.then(undefined, onRejected);
 	};
 
-	async.run = function () {
-	    while (queue.length) {
-	        queue[0]();
-	        queue.shift();
+	var PromiseObj = window.Promise || Promise$2;
+
+	function Promise$1(executor, context) {
+
+	    if (executor instanceof PromiseObj) {
+	        this.promise = executor;
+	    } else {
+	        this.promise = new PromiseObj(executor.bind(context));
 	    }
+
+	    this.context = context;
+	}
+
+	Promise$1.all = function (iterable, context) {
+	    return new Promise$1(PromiseObj.all(iterable), context);
 	};
 
-	if (window.MutationObserver) {
-	    var el = document.createElement('div');
-	    var mo = new MutationObserver(async.run);
+	Promise$1.resolve = function (value, context) {
+	    return new Promise$1(PromiseObj.resolve(value), context);
+	};
 
-	    mo.observe(el, {
-	        attributes: true
+	Promise$1.reject = function (reason, context) {
+	    return new Promise$1(PromiseObj.reject(reason), context);
+	};
+
+	Promise$1.race = function (iterable, context) {
+	    return new Promise$1(PromiseObj.race(iterable), context);
+	};
+
+	var p = Promise$1.prototype;
+
+	p.bind = function (context) {
+	    this.context = context;
+	    return this;
+	};
+
+	p.then = function (fulfilled, rejected) {
+
+	    if (fulfilled && fulfilled.bind && this.context) {
+	        fulfilled = fulfilled.bind(this.context);
+	    }
+
+	    if (rejected && rejected.bind && this.context) {
+	        rejected = rejected.bind(this.context);
+	    }
+
+	    return new Promise$1(this.promise.then(fulfilled, rejected), this.context);
+	};
+
+	p.catch = function (rejected) {
+
+	    if (rejected && rejected.bind && this.context) {
+	        rejected = rejected.bind(this.context);
+	    }
+
+	    return new Promise$1(this.promise.catch(rejected), this.context);
+	};
+
+	p.finally = function (callback) {
+
+	    return this.then(function (value) {
+	        callback.call(this);
+	        return value;
+	    }, function (reason) {
+	        callback.call(this);
+	        return PromiseObj.reject(reason);
+	    });
+	};
+
+	var debug = false;
+	var util = {};
+	var array = [];
+	function Util (Vue) {
+	    util = Vue.util;
+	    debug = Vue.config.debug || !Vue.config.silent;
+	}
+
+	function warn(msg) {
+	    if (typeof console !== 'undefined' && debug) {
+	        console.warn('[VueResource warn]: ' + msg);
+	    }
+	}
+
+	function error(msg) {
+	    if (typeof console !== 'undefined') {
+	        console.error(msg);
+	    }
+	}
+
+	function nextTick(cb, ctx) {
+	    return util.nextTick(cb, ctx);
+	}
+
+	function trim(str) {
+	    return str.replace(/^\s*|\s*$/g, '');
+	}
+
+	var isArray = Array.isArray;
+
+	function isString(val) {
+	    return typeof val === 'string';
+	}
+
+	function isBoolean(val) {
+	    return val === true || val === false;
+	}
+
+	function isFunction(val) {
+	    return typeof val === 'function';
+	}
+
+	function isObject(obj) {
+	    return obj !== null && typeof obj === 'object';
+	}
+
+	function isPlainObject(obj) {
+	    return isObject(obj) && Object.getPrototypeOf(obj) == Object.prototype;
+	}
+
+	function isFormData(obj) {
+	    return typeof FormData !== 'undefined' && obj instanceof FormData;
+	}
+
+	function when(value, fulfilled, rejected) {
+
+	    var promise = Promise$1.resolve(value);
+
+	    if (arguments.length < 2) {
+	        return promise;
+	    }
+
+	    return promise.then(fulfilled, rejected);
+	}
+
+	function options(fn, obj, opts) {
+
+	    opts = opts || {};
+
+	    if (isFunction(opts)) {
+	        opts = opts.call(obj);
+	    }
+
+	    return merge(fn.bind({ $vm: obj, $options: opts }), fn, { $options: opts });
+	}
+
+	function each(obj, iterator) {
+
+	    var i, key;
+
+	    if (typeof obj.length == 'number') {
+	        for (i = 0; i < obj.length; i++) {
+	            iterator.call(obj[i], obj[i], i);
+	        }
+	    } else if (isObject(obj)) {
+	        for (key in obj) {
+	            if (obj.hasOwnProperty(key)) {
+	                iterator.call(obj[key], obj[key], key);
+	            }
+	        }
+	    }
+
+	    return obj;
+	}
+
+	var assign = Object.assign || _assign;
+
+	function merge(target) {
+
+	    var args = array.slice.call(arguments, 1);
+
+	    args.forEach(function (source) {
+	        _merge(target, source, true);
 	    });
 
-	    async.async = function () {
-	        el.setAttribute("x", 0);
-	    };
-	} else {
-	    async.async = function () {
-	        setTimeout(async.run);
+	    return target;
+	}
+
+	function defaults(target) {
+
+	    var args = array.slice.call(arguments, 1);
+
+	    args.forEach(function (source) {
+
+	        for (var key in source) {
+	            if (target[key] === undefined) {
+	                target[key] = source[key];
+	            }
+	        }
+	    });
+
+	    return target;
+	}
+
+	function _assign(target) {
+
+	    var args = array.slice.call(arguments, 1);
+
+	    args.forEach(function (source) {
+	        _merge(target, source);
+	    });
+
+	    return target;
+	}
+
+	function _merge(target, source, deep) {
+	    for (var key in source) {
+	        if (deep && (isPlainObject(source[key]) || isArray(source[key]))) {
+	            if (isPlainObject(source[key]) && !isPlainObject(target[key])) {
+	                target[key] = {};
+	            }
+	            if (isArray(source[key]) && !isArray(target[key])) {
+	                target[key] = [];
+	            }
+	            _merge(target[key], source[key], deep);
+	        } else if (source[key] !== undefined) {
+	            target[key] = source[key];
+	        }
+	    }
+	}
+
+	function root (options, next) {
+
+	    var url = next(options);
+
+	    if (isString(options.root) && !url.match(/^(https?:)?\//)) {
+	        url = options.root + '/' + url;
+	    }
+
+	    return url;
+	}
+
+	function query (options, next) {
+
+	    var urlParams = Object.keys(Url.options.params),
+	        query = {},
+	        url = next(options);
+
+	    each(options.params, function (value, key) {
+	        if (urlParams.indexOf(key) === -1) {
+	            query[key] = value;
+	        }
+	    });
+
+	    query = Url.params(query);
+
+	    if (query) {
+	        url += (url.indexOf('?') == -1 ? '?' : '&') + query;
+	    }
+
+	    return url;
+	}
+
+	/**
+	 * URL Template v2.0.6 (https://github.com/bramstein/url-template)
+	 */
+
+	function expand(url, params, variables) {
+
+	    var tmpl = parse(url),
+	        expanded = tmpl.expand(params);
+
+	    if (variables) {
+	        variables.push.apply(variables, tmpl.vars);
+	    }
+
+	    return expanded;
+	}
+
+	function parse(template) {
+
+	    var operators = ['+', '#', '.', '/', ';', '?', '&'],
+	        variables = [];
+
+	    return {
+	        vars: variables,
+	        expand: function (context) {
+	            return template.replace(/\{([^\{\}]+)\}|([^\{\}]+)/g, function (_, expression, literal) {
+	                if (expression) {
+
+	                    var operator = null,
+	                        values = [];
+
+	                    if (operators.indexOf(expression.charAt(0)) !== -1) {
+	                        operator = expression.charAt(0);
+	                        expression = expression.substr(1);
+	                    }
+
+	                    expression.split(/,/g).forEach(function (variable) {
+	                        var tmp = /([^:\*]*)(?::(\d+)|(\*))?/.exec(variable);
+	                        values.push.apply(values, getValues(context, operator, tmp[1], tmp[2] || tmp[3]));
+	                        variables.push(tmp[1]);
+	                    });
+
+	                    if (operator && operator !== '+') {
+
+	                        var separator = ',';
+
+	                        if (operator === '?') {
+	                            separator = '&';
+	                        } else if (operator !== '#') {
+	                            separator = operator;
+	                        }
+
+	                        return (values.length !== 0 ? operator : '') + values.join(separator);
+	                    } else {
+	                        return values.join(',');
+	                    }
+	                } else {
+	                    return encodeReserved(literal);
+	                }
+	            });
+	        }
 	    };
 	}
 
-	module.exports = window.Promise || Promise;
+	function getValues(context, operator, key, modifier) {
 
+	    var value = context[key],
+	        result = [];
 
-/***/ },
-/* 11 */
-/***/ function(module, exports, __webpack_require__) {
+	    if (isDefined(value) && value !== '') {
+	        if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+	            value = value.toString();
 
-	/**
-	 * JSONP request.
-	 */
+	            if (modifier && modifier !== '*') {
+	                value = value.substring(0, parseInt(modifier, 10));
+	            }
 
-	var Promise = __webpack_require__(10);
+	            result.push(encodeValue(operator, value, isKeyOperator(operator) ? key : null));
+	        } else {
+	            if (modifier === '*') {
+	                if (Array.isArray(value)) {
+	                    value.filter(isDefined).forEach(function (value) {
+	                        result.push(encodeValue(operator, value, isKeyOperator(operator) ? key : null));
+	                    });
+	                } else {
+	                    Object.keys(value).forEach(function (k) {
+	                        if (isDefined(value[k])) {
+	                            result.push(encodeValue(operator, value[k], k));
+	                        }
+	                    });
+	                }
+	            } else {
+	                var tmp = [];
 
-	module.exports = function (_, options) {
+	                if (Array.isArray(value)) {
+	                    value.filter(isDefined).forEach(function (value) {
+	                        tmp.push(encodeValue(operator, value));
+	                    });
+	                } else {
+	                    Object.keys(value).forEach(function (k) {
+	                        if (isDefined(value[k])) {
+	                            tmp.push(encodeURIComponent(k));
+	                            tmp.push(encodeValue(operator, value[k].toString()));
+	                        }
+	                    });
+	                }
 
-	    var callback = '_jsonp' + Math.random().toString(36).substr(2), response = {}, script, body;
-
-	    options.params[options.jsonp] = callback;
-
-	    if (_.isFunction(options.beforeSend)) {
-	        options.beforeSend.call(this, {}, options);
+	                if (isKeyOperator(operator)) {
+	                    result.push(encodeURIComponent(key) + '=' + tmp.join(','));
+	                } else if (tmp.length !== 0) {
+	                    result.push(tmp.join(','));
+	                }
+	            }
+	        }
+	    } else {
+	        if (operator === ';') {
+	            result.push(encodeURIComponent(key));
+	        } else if (value === '' && (operator === '&' || operator === '?')) {
+	            result.push(encodeURIComponent(key) + '=');
+	        } else if (value === '') {
+	            result.push('');
+	        }
 	    }
 
-	    return new Promise(function (resolve, reject) {
+	    return result;
+	}
 
-	        script = document.createElement('script');
-	        script.src = _.url(options);
-	        script.type = 'text/javascript';
-	        script.async = true;
+	function isDefined(value) {
+	    return value !== undefined && value !== null;
+	}
 
-	        window[callback] = function (data) {
-	            body = data;
+	function isKeyOperator(operator) {
+	    return operator === ';' || operator === '&' || operator === '?';
+	}
+
+	function encodeValue(operator, value, key) {
+
+	    value = operator === '+' || operator === '#' ? encodeReserved(value) : encodeURIComponent(value);
+
+	    if (key) {
+	        return encodeURIComponent(key) + '=' + value;
+	    } else {
+	        return value;
+	    }
+	}
+
+	function encodeReserved(str) {
+	    return str.split(/(%[0-9A-Fa-f]{2})/g).map(function (part) {
+	        if (!/%[0-9A-Fa-f]/.test(part)) {
+	            part = encodeURI(part);
+	        }
+	        return part;
+	    }).join('');
+	}
+
+	function template (options) {
+
+	    var variables = [],
+	        url = expand(options.url, options.params, variables);
+
+	    variables.forEach(function (key) {
+	        delete options.params[key];
+	    });
+
+	    return url;
+	}
+
+	/**
+	 * Service for URL templating.
+	 */
+
+	var ie = document.documentMode;
+	var el = document.createElement('a');
+
+	function Url(url, params) {
+
+	    var self = this || {},
+	        options = url,
+	        transform;
+
+	    if (isString(url)) {
+	        options = { url: url, params: params };
+	    }
+
+	    options = merge({}, Url.options, self.$options, options);
+
+	    Url.transforms.forEach(function (handler) {
+	        transform = factory(handler, transform, self.$vm);
+	    });
+
+	    return transform(options);
+	}
+
+	/**
+	 * Url options.
+	 */
+
+	Url.options = {
+	    url: '',
+	    root: null,
+	    params: {}
+	};
+
+	/**
+	 * Url transforms.
+	 */
+
+	Url.transforms = [template, query, root];
+
+	/**
+	 * Encodes a Url parameter string.
+	 *
+	 * @param {Object} obj
+	 */
+
+	Url.params = function (obj) {
+
+	    var params = [],
+	        escape = encodeURIComponent;
+
+	    params.add = function (key, value) {
+
+	        if (isFunction(value)) {
+	            value = value();
+	        }
+
+	        if (value === null) {
+	            value = '';
+	        }
+
+	        this.push(escape(key) + '=' + escape(value));
+	    };
+
+	    serialize(params, obj);
+
+	    return params.join('&').replace(/%20/g, '+');
+	};
+
+	/**
+	 * Parse a URL and return its components.
+	 *
+	 * @param {String} url
+	 */
+
+	Url.parse = function (url) {
+
+	    if (ie) {
+	        el.href = url;
+	        url = el.href;
+	    }
+
+	    el.href = url;
+
+	    return {
+	        href: el.href,
+	        protocol: el.protocol ? el.protocol.replace(/:$/, '') : '',
+	        port: el.port,
+	        host: el.host,
+	        hostname: el.hostname,
+	        pathname: el.pathname.charAt(0) === '/' ? el.pathname : '/' + el.pathname,
+	        search: el.search ? el.search.replace(/^\?/, '') : '',
+	        hash: el.hash ? el.hash.replace(/^#/, '') : ''
+	    };
+	};
+
+	function factory(handler, next, vm) {
+	    return function (options) {
+	        return handler.call(vm, options, next);
+	    };
+	}
+
+	function serialize(params, obj, scope) {
+
+	    var array = isArray(obj),
+	        plain = isPlainObject(obj),
+	        hash;
+
+	    each(obj, function (value, key) {
+
+	        hash = isObject(value) || isArray(value);
+
+	        if (scope) {
+	            key = scope + '[' + (plain || hash ? key : '') + ']';
+	        }
+
+	        if (!scope && array) {
+	            params.add(value.name, value.value);
+	        } else if (hash) {
+	            serialize(params, value, key);
+	        } else {
+	            params.add(key, value);
+	        }
+	    });
+	}
+
+	function xdrClient (request) {
+	    return new Promise$1(function (resolve) {
+
+	        var xdr = new XDomainRequest(),
+	            handler = function (event) {
+
+	            var response = request.respondWith(xdr.responseText, {
+	                status: xdr.status,
+	                statusText: xdr.statusText
+	            });
+
+	            resolve(response);
 	        };
 
-	        var handler = function (event) {
+	        request.abort = function () {
+	            return xdr.abort();
+	        };
+
+	        xdr.open(request.method, request.getUrl(), true);
+	        xdr.timeout = 0;
+	        xdr.onload = handler;
+	        xdr.onerror = handler;
+	        xdr.ontimeout = function () {};
+	        xdr.onprogress = function () {};
+	        xdr.send(request.getBody());
+	    });
+	}
+
+	var ORIGIN_URL = Url.parse(location.href);
+	var SUPPORTS_CORS = 'withCredentials' in new XMLHttpRequest();
+
+	function cors (request, next) {
+
+	    if (!isBoolean(request.crossOrigin) && crossOrigin(request)) {
+	        request.crossOrigin = true;
+	    }
+
+	    if (request.crossOrigin) {
+
+	        if (!SUPPORTS_CORS) {
+	            request.client = xdrClient;
+	        }
+
+	        delete request.emulateHTTP;
+	    }
+
+	    next();
+	}
+
+	function crossOrigin(request) {
+
+	    var requestUrl = Url.parse(Url(request));
+
+	    return requestUrl.protocol !== ORIGIN_URL.protocol || requestUrl.host !== ORIGIN_URL.host;
+	}
+
+	function body (request, next) {
+
+	    if (request.emulateJSON && isPlainObject(request.body)) {
+	        request.body = Url.params(request.body);
+	        request.headers['Content-Type'] = 'application/x-www-form-urlencoded';
+	    }
+
+	    if (isFormData(request.body)) {
+	        delete request.headers['Content-Type'];
+	    }
+
+	    if (isPlainObject(request.body)) {
+	        request.body = JSON.stringify(request.body);
+	    }
+
+	    next(function (response) {
+
+	        var contentType = response.headers['Content-Type'];
+
+	        if (isString(contentType) && contentType.indexOf('application/json') === 0) {
+
+	            try {
+	                response.data = response.json();
+	            } catch (e) {
+	                response.data = null;
+	            }
+	        } else {
+	            response.data = response.text();
+	        }
+	    });
+	}
+
+	function jsonpClient (request) {
+	    return new Promise$1(function (resolve) {
+
+	        var name = request.jsonp || 'callback',
+	            callback = '_jsonp' + Math.random().toString(36).substr(2),
+	            body = null,
+	            handler,
+	            script;
+
+	        handler = function (event) {
+
+	            var status = 0;
+
+	            if (event.type === 'load' && body !== null) {
+	                status = 200;
+	            } else if (event.type === 'error') {
+	                status = 404;
+	            }
+
+	            resolve(request.respondWith(body, { status: status }));
 
 	            delete window[callback];
 	            document.body.removeChild(script);
-
-	            if (event.type === 'load' && !body) {
-	                event.type = 'error';
-	            }
-
-	            response.ok = event.type !== 'error';
-	            response.status = response.ok ? 200 : 404;
-	            response.responseText = body ? body : event.type;
-
-	            (response.ok ? resolve : reject)(response);
 	        };
 
+	        request.params[name] = callback;
+
+	        window[callback] = function (result) {
+	            body = JSON.stringify(result);
+	        };
+
+	        script = document.createElement('script');
+	        script.src = request.getUrl();
+	        script.type = 'text/javascript';
+	        script.async = true;
 	        script.onload = handler;
 	        script.onerror = handler;
 
 	        document.body.appendChild(script);
 	    });
+	}
 
-	};
+	function jsonp (request, next) {
 
+	    if (request.method == 'JSONP') {
+	        request.client = jsonpClient;
+	    }
 
-/***/ },
-/* 12 */
-/***/ function(module, exports) {
+	    next(function (response) {
+
+	        if (request.method == 'JSONP') {
+	            response.data = response.json();
+	        }
+	    });
+	}
+
+	function before (request, next) {
+
+	    if (isFunction(request.before)) {
+	        request.before.call(this, request);
+	    }
+
+	    next();
+	}
 
 	/**
-	 * Service for interacting with RESTful services.
+	 * HTTP method override Interceptor.
 	 */
 
-	module.exports = function (_) {
+	function method (request, next) {
 
-	    function Resource(url, params, actions, options) {
+	    if (request.emulateHTTP && /^(PUT|PATCH|DELETE)$/i.test(request.method)) {
+	        request.headers['X-HTTP-Method-Override'] = request.method;
+	        request.method = 'POST';
+	    }
 
-	        var self = this, resource = {};
+	    next();
+	}
 
-	        actions = _.extend({},
-	            Resource.actions,
-	            actions
-	        );
+	function header (request, next) {
 
-	        _.each(actions, function (action, name) {
+	    request.method = request.method.toUpperCase();
+	    request.headers = assign({}, Http.headers.common, !request.crossOrigin ? Http.headers.custom : {}, Http.headers[request.method.toLowerCase()], request.headers);
 
-	            action = _.extend(true, {url: url, params: params || {}}, options, action);
+	    next();
+	}
 
-	            resource[name] = function () {
-	                return (self.$http || _.http)(opts(action, arguments));
-	            };
+	/**
+	 * Timeout Interceptor.
+	 */
+
+	function timeout (request, next) {
+
+	    var timeout;
+
+	    if (request.timeout) {
+	        timeout = setTimeout(function () {
+	            request.abort();
+	        }, request.timeout);
+	    }
+
+	    next(function (response) {
+
+	        clearTimeout(timeout);
+	    });
+	}
+
+	function xhrClient (request) {
+	    return new Promise$1(function (resolve) {
+
+	        var xhr = new XMLHttpRequest(),
+	            handler = function (event) {
+
+	            var response = request.respondWith('response' in xhr ? xhr.response : xhr.responseText, {
+	                status: xhr.status === 1223 ? 204 : xhr.status, // IE9 status bug
+	                statusText: xhr.status === 1223 ? 'No Content' : trim(xhr.statusText),
+	                headers: parseHeaders(xhr.getAllResponseHeaders())
+	            });
+
+	            resolve(response);
+	        };
+
+	        request.abort = function () {
+	            return xhr.abort();
+	        };
+
+	        xhr.open(request.method, request.getUrl(), true);
+	        xhr.timeout = 0;
+	        xhr.onload = handler;
+	        xhr.onerror = handler;
+
+	        if (request.progress) {
+	            if (request.method === 'GET') {
+	                xhr.addEventListener('progress', request.progress);
+	            } else if (/^(POST|PUT)$/i.test(request.method)) {
+	                xhr.upload.addEventListener('progress', request.progress);
+	            }
+	        }
+
+	        if (request.credentials === true) {
+	            xhr.withCredentials = true;
+	        }
+
+	        each(request.headers || {}, function (value, header) {
+	            xhr.setRequestHeader(header, value);
 	        });
 
-	        return resource;
+	        xhr.send(request.getBody());
+	    });
+	}
+
+	function parseHeaders(str) {
+
+	    var headers = {},
+	        value,
+	        name,
+	        i;
+
+	    each(trim(str).split('\n'), function (row) {
+
+	        i = row.indexOf(':');
+	        name = trim(row.slice(0, i));
+	        value = trim(row.slice(i + 1));
+
+	        if (headers[name]) {
+
+	            if (isArray(headers[name])) {
+	                headers[name].push(value);
+	            } else {
+	                headers[name] = [headers[name], value];
+	            }
+	        } else {
+
+	            headers[name] = value;
+	        }
+	    });
+
+	    return headers;
+	}
+
+	function Client (context) {
+
+	    var reqHandlers = [sendRequest],
+	        resHandlers = [],
+	        handler;
+
+	    if (!isObject(context)) {
+	        context = null;
 	    }
 
-	    function opts(action, args) {
+	    function Client(request) {
+	        return new Promise$1(function (resolve) {
 
-	        var options = _.extend({}, action), params = {}, data, success, error;
+	            function exec() {
 
-	        switch (args.length) {
+	                handler = reqHandlers.pop();
 
-	            case 4:
-
-	                error = args[3];
-	                success = args[2];
-
-	            case 3:
-	            case 2:
-
-	                if (_.isFunction(args[1])) {
-
-	                    if (_.isFunction(args[0])) {
-
-	                        success = args[0];
-	                        error = args[1];
-
-	                        break;
-	                    }
-
-	                    success = args[1];
-	                    error = args[2];
-
+	                if (isFunction(handler)) {
+	                    handler.call(context, request, next);
 	                } else {
+	                    warn('Invalid interceptor of type ' + typeof handler + ', must be a function');
+	                    next();
+	                }
+	            }
 
-	                    params = args[0];
-	                    data = args[1];
-	                    success = args[2];
+	            function next(response) {
 
-	                    break;
+	                if (isFunction(response)) {
+
+	                    resHandlers.unshift(response);
+	                } else if (isObject(response)) {
+
+	                    resHandlers.forEach(function (handler) {
+	                        response = when(response, function (response) {
+	                            return handler.call(context, response) || response;
+	                        });
+	                    });
+
+	                    when(response, resolve);
+
+	                    return;
 	                }
 
-	            case 1:
+	                exec();
+	            }
 
-	                if (_.isFunction(args[0])) {
-	                    success = args[0];
-	                } else if (/^(POST|PUT|PATCH)$/i.test(options.method)) {
-	                    data = args[0];
-	                } else {
-	                    params = args[0];
-	                }
-
-	                break;
-
-	            case 0:
-
-	                break;
-
-	            default:
-
-	                throw 'Expected up to 4 arguments [params, data, success, error], got ' + args.length + ' arguments';
-	        }
-
-	        options.data = data;
-	        options.params = _.extend({}, options.params, params);
-
-	        if (success) {
-	            options.success = success;
-	        }
-
-	        if (error) {
-	            options.error = error;
-	        }
-
-	        return options;
+	            exec();
+	        }, context);
 	    }
 
-	    Resource.actions = {
-
-	        get: {method: 'GET'},
-	        save: {method: 'POST'},
-	        query: {method: 'GET'},
-	        update: {method: 'PUT'},
-	        remove: {method: 'DELETE'},
-	        delete: {method: 'DELETE'}
-
+	    Client.use = function (handler) {
+	        reqHandlers.push(handler);
 	    };
 
-	    return _.resource = Resource;
+	    return Client;
+	}
+
+	function sendRequest(request, resolve) {
+
+	    var client = request.client || xhrClient;
+
+	    resolve(client(request));
+	}
+
+	var classCallCheck = function (instance, Constructor) {
+	  if (!(instance instanceof Constructor)) {
+	    throw new TypeError("Cannot call a class as a function");
+	  }
 	};
 
+	/**
+	 * HTTP Response.
+	 */
+
+	var Response = function () {
+	    function Response(body, _ref) {
+	        var url = _ref.url;
+	        var headers = _ref.headers;
+	        var status = _ref.status;
+	        var statusText = _ref.statusText;
+	        classCallCheck(this, Response);
+
+
+	        this.url = url;
+	        this.body = body;
+	        this.headers = headers || {};
+	        this.status = status || 0;
+	        this.statusText = statusText || '';
+	        this.ok = status >= 200 && status < 300;
+	    }
+
+	    Response.prototype.text = function text() {
+	        return this.body;
+	    };
+
+	    Response.prototype.blob = function blob() {
+	        return new Blob([this.body]);
+	    };
+
+	    Response.prototype.json = function json() {
+	        return JSON.parse(this.body);
+	    };
+
+	    return Response;
+	}();
+
+	var Request = function () {
+	    function Request(options) {
+	        classCallCheck(this, Request);
+
+
+	        this.method = 'GET';
+	        this.body = null;
+	        this.params = {};
+	        this.headers = {};
+
+	        assign(this, options);
+	    }
+
+	    Request.prototype.getUrl = function getUrl() {
+	        return Url(this);
+	    };
+
+	    Request.prototype.getBody = function getBody() {
+	        return this.body;
+	    };
+
+	    Request.prototype.respondWith = function respondWith(body, options) {
+	        return new Response(body, assign(options || {}, { url: this.getUrl() }));
+	    };
+
+	    return Request;
+	}();
+
+	/**
+	 * Service for sending network requests.
+	 */
+
+	var CUSTOM_HEADERS = { 'X-Requested-With': 'XMLHttpRequest' };
+	var COMMON_HEADERS = { 'Accept': 'application/json, text/plain, */*' };
+	var JSON_CONTENT_TYPE = { 'Content-Type': 'application/json;charset=utf-8' };
+
+	function Http(options) {
+
+	    var self = this || {},
+	        client = Client(self.$vm);
+
+	    defaults(options || {}, self.$options, Http.options);
+
+	    Http.interceptors.forEach(function (handler) {
+	        client.use(handler);
+	    });
+
+	    return client(new Request(options)).then(function (response) {
+
+	        return response.ok ? response : Promise$1.reject(response);
+	    }, function (response) {
+
+	        if (response instanceof Error) {
+	            error(response);
+	        }
+
+	        return Promise$1.reject(response);
+	    });
+	}
+
+	Http.options = {};
+
+	Http.headers = {
+	    put: JSON_CONTENT_TYPE,
+	    post: JSON_CONTENT_TYPE,
+	    patch: JSON_CONTENT_TYPE,
+	    delete: JSON_CONTENT_TYPE,
+	    custom: CUSTOM_HEADERS,
+	    common: COMMON_HEADERS
+	};
+
+	Http.interceptors = [before, timeout, method, body, jsonp, header, cors];
+
+	['get', 'delete', 'head', 'jsonp'].forEach(function (method) {
+
+	    Http[method] = function (url, options) {
+	        return this(assign(options || {}, { url: url, method: method }));
+	    };
+	});
+
+	['post', 'put', 'patch'].forEach(function (method) {
+
+	    Http[method] = function (url, body, options) {
+	        return this(assign(options || {}, { url: url, method: method, body: body }));
+	    };
+	});
+
+	function Resource(url, params, actions, options) {
+
+	    var self = this || {},
+	        resource = {};
+
+	    actions = assign({}, Resource.actions, actions);
+
+	    each(actions, function (action, name) {
+
+	        action = merge({ url: url, params: params || {} }, options, action);
+
+	        resource[name] = function () {
+	            return (self.$http || Http)(opts(action, arguments));
+	        };
+	    });
+
+	    return resource;
+	}
+
+	function opts(action, args) {
+
+	    var options = assign({}, action),
+	        params = {},
+	        body;
+
+	    switch (args.length) {
+
+	        case 2:
+
+	            params = args[0];
+	            body = args[1];
+
+	            break;
+
+	        case 1:
+
+	            if (/^(POST|PUT|PATCH)$/i.test(options.method)) {
+	                body = args[0];
+	            } else {
+	                params = args[0];
+	            }
+
+	            break;
+
+	        case 0:
+
+	            break;
+
+	        default:
+
+	            throw 'Expected up to 4 arguments [params, body], got ' + args.length + ' arguments';
+	    }
+
+	    options.body = body;
+	    options.params = assign({}, options.params, params);
+
+	    return options;
+	}
+
+	Resource.actions = {
+
+	    get: { method: 'GET' },
+	    save: { method: 'POST' },
+	    query: { method: 'GET' },
+	    update: { method: 'PUT' },
+	    remove: { method: 'DELETE' },
+	    delete: { method: 'DELETE' }
+
+	};
+
+	function plugin(Vue) {
+
+	    if (plugin.installed) {
+	        return;
+	    }
+
+	    Util(Vue);
+
+	    Vue.url = Url;
+	    Vue.http = Http;
+	    Vue.resource = Resource;
+	    Vue.Promise = Promise$1;
+
+	    Object.defineProperties(Vue.prototype, {
+
+	        $url: {
+	            get: function () {
+	                return options(Vue.url, this, this.$options.url);
+	            }
+	        },
+
+	        $http: {
+	            get: function () {
+	                return options(Vue.http, this, this.$options.http);
+	            }
+	        },
+
+	        $resource: {
+	            get: function () {
+	                return Vue.resource.bind(this);
+	            }
+	        },
+
+	        $promise: {
+	            get: function () {
+	                var _this = this;
+
+	                return function (executor) {
+	                    return new Vue.Promise(executor, _this);
+	                };
+	            }
+	        }
+
+	    });
+	}
+
+	if (typeof window !== 'undefined' && window.Vue) {
+	    window.Vue.use(plugin);
+	}
+
+	module.exports = plugin;
 
 /***/ },
-/* 13 */
+/* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __vue_script__, __vue_template__
-	__vue_script__ = __webpack_require__(14)
-	__vue_template__ = __webpack_require__(23)
+	__vue_script__ = __webpack_require__(7)
+	__vue_template__ = __webpack_require__(17)
 	module.exports = __vue_script__ || {}
 	if (module.exports.__esModule) module.exports = module.exports.default
 	if (__vue_template__) { (typeof module.exports === "function" ? module.exports.options : module.exports).template = __vue_template__ }
@@ -14175,24 +14606,52 @@
 	})()}
 
 /***/ },
-/* 14 */
+/* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _TodoList = __webpack_require__(15);
-
-	var _TodoList2 = _interopRequireDefault(_TodoList);
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
 
 	var _vue = __webpack_require__(2);
 
 	var _vue2 = _interopRequireDefault(_vue);
 
+	var _TodoList = __webpack_require__(8);
+
+	var _TodoList2 = _interopRequireDefault(_TodoList);
+
+	var _auth = __webpack_require__(15);
+
+	var _auth2 = _interopRequireDefault(_auth);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+	exports.default = {
+	  data: function data() {
+	    return {
+	      user: _auth2.default.user
+	    };
+	  },
+
+	  created: function created() {
+	    this.initApp();
+	  },
+	  methods: {
+	    initApp: function initApp() {
+	      if (this.user.authenticated) {
+	        _vue2.default.component("todo-list", _TodoList2.default);
+	      }
+	    }
+	  }
+	};
+	// </script>
+	//
 	// <template>
 	//     <div class="container">
-	//       <div class="container page-header">
+	//       <div class="page-header">
 	//         <h1>Simple Vue.js To-do List App</h1>
 	//         <p class="lead">
 	//           Type text below and hit enter key to add new tasks. Click priority label on task to change it. Tasks sort by priority and when created.
@@ -14200,7 +14659,12 @@
 	//           <small> Demo uses browser's local storage - task list will persist between visits unless browser's cache is cleared.</small>
 	//         </p>
 	//       </div>
-	//       <div class="row">
+	//       <div class="container" v-if="!user.authenticated">
+	//         <h2>
+	//           Not Login yet. Please <a v-link="'login'">Login in</a>.
+	//         </h2>
+	//       </div>
+	//       <div class="row" v-if="user.authenticated">
 	//         <div class="col-sm-12">
 	//           <todo-list></todo-list>
 	//         </div>
@@ -14209,17 +14673,14 @@
 	// </template>
 	//
 	// <script>
-	_vue2.default.component("todo-list", _TodoList2.default);
-	// </script>
-	//
 
 /***/ },
-/* 15 */
+/* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __vue_script__, __vue_template__
-	__vue_script__ = __webpack_require__(16)
-	__vue_template__ = __webpack_require__(22)
+	__vue_script__ = __webpack_require__(9)
+	__vue_template__ = __webpack_require__(16)
 	module.exports = __vue_script__ || {}
 	if (module.exports.__esModule) module.exports = module.exports.default
 	if (__vue_template__) { (typeof module.exports === "function" ? module.exports.options : module.exports).template = __vue_template__ }
@@ -14236,25 +14697,71 @@
 	})()}
 
 /***/ },
-/* 16 */
+/* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
-	"use strict";
+	'use strict';
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var _stringify = __webpack_require__(17);
+	var _stringify = __webpack_require__(10);
 
 	var _stringify2 = _interopRequireDefault(_stringify);
 
-	var _lodash = __webpack_require__(20);
+	var _lodash = __webpack_require__(13);
 
 	var _lodash2 = _interopRequireDefault(_lodash);
 
+	var _auth = __webpack_require__(15);
+
+	var _auth2 = _interopRequireDefault(_auth);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+	// <template id="todo-list-template">
+	//   <div>
+	//     <input class="form-control input-lg" placeholder="What do you need to do?" v-model="newTask" @keypress.enter="addTodo()">
+	//     <hr>
+	//     <small>
+	//       <i class="fa fa-fw fa-bar-chart"></i>
+	//       <span v-show="!remainingTasks && completedTasks">No Tasks Remaining</span>
+	//       <span v-show="remainingTasks">{{ remainingTasks }} Remaining Task<span v-show="remainingTasks > 1 || remainingTasks === 0">s</span></span>
+	//       <span v-show="totalTasks > 1 && totalTasks > remainingTasks"> of {{ totalTasks }} Total Task<span v-show="totalTasks > 1 || totalTasks === 0">s</span></span>
+	//       <span v-show="!remainingTasks && !completedTasks">No Tasks in List</span>
+	//       <span v-show="completedTasks"> | <a class="text-warning" href="#" @click.prevent="clearCompleted"><i class="fa fa-fw fa-times"></i>Remove Completed Tasks from List</a></span>
+	//       <a class="text-danger pull-right" href="#" @click.prevent="resetApp">Reset to Default Demo Data<i class="fa fa-fw fa-refresh"></i></a>
+	//     </small>
+	//     <hr>
+	//     <ul class="list-group">
+	//       <li class="list-group-item animated flipInX" v-for="todo in tasks">
+	//         <div class="row">
+	//           <div class="col-sm-12">
+	//             <i :class="{ 'fa fa-fw fa-2x fa-circle-o task-check': !todo.completed, 'fa fa-fw fa-2x fa-check-circle-o text-success task-check': todo.completed }" @click="toggleTodoStatus( todo )"></i>
+	//             <span :class="{ 'task-text': !todo.completed, 'task-text task-completed text-success': todo.completed }" @click="toggleTodoStatus( todo )">
+	//               {{ todo.task }}
+	//             </span>
+	//             <button class="btn btn-danger btn-sm pull-right" @click="deleteTodo( todo )"><i class="fa fa-2x fa-minus-circle"></i></button>
+	//           </div>
+	//         </div>
+	//         <div class="row">
+	//           <div class="col-sm-12">
+	//             <small class="priority-meta text-muted">
+	//               Priority:
+	//               <span @click="togglePriority( todo, 3 )" :class="{ 'label label-default priority-label inactive': todo.priority !== 3 , 'label label-info priority-label': todo.priority === 3 }"><i class="fa fa-chevron-down"></i> Low</span>
+	//               <span @click="togglePriority( todo, 2 )" :class="{ 'label label-default priority-label inactive': todo.priority !== 2 , 'label label-primary priority-label': todo.priority === 2 }">Normal</span>
+	//               <span @click="togglePriority( todo, 1 )" :class="{ 'label label-default priority-label inactive': todo.priority !== 1 , 'label label-danger priority-label': todo.priority === 1 }">High <i class="fa fa-chevron-up"></i></span>
+	//               <span v-show="todo.created"><i class="fa fa-clock-o time-created"></i> Added <span class="timeago" :datetime="todo.created">{{ todo.created | timeago }}</span></span>
+	//             </small>
+	//           </div>
+	//         </div>
+	//       </li>
+	//     </ul>
+	//   </div>
+	// </template>
+	//
+	// <script>
 	exports.default = {
 	  data: function data() {
 	    return {
@@ -14274,32 +14781,30 @@
 	  },
 	  methods: {
 	    togglePriority: function togglePriority(task, priority) {
-	      var _this = this;
-
 	      var originUpdateTime = task.updated;
 	      var originPriority = task.priority;
 	      task.updated = Date.now();
 	      task.priority = priority;
 
-	      this.$http.put(this.backendUri + task._id, task, function (response) {
-	        _this.sortTasks(_this.defaultSortBy, _this.defaultSortOrder);
-	        _this.setData("todoData", _this.tasks);
-	      }).error(function (err) {
+	      this.$http.put(this.backendUri + task._id, task).then(function (response) {
+	        this.sortTasks(this.defaultSortBy, this.defaultSortOrder);
+	        this.setData("todoData", this.tasks);
+	      }, function (err) {
 	        task.updated = originUpdateTime;
 	        task.priority = originPriority;
 	        alert("update task failed");
 	      });
 	    },
 	    toggleTodoStatus: function toggleTodoStatus(task) {
-	      var _this2 = this;
+	      var _this = this;
 
 	      var originUpdateTime = task.updated;
 	      task.updated = Date.now();
 	      task.completed = !task.completed;
 
-	      this.$http.put(this.backendUri + task._id, task, function (response) {
-	        _this2.setData("todoData", _this2.tasks);
-	      }).error(function (err) {
+	      this.$http.put(this.backendUri + task._id, task).then(function (response) {
+	        _this.setData("todoData", _this.tasks);
+	      }, function (err) {
 	        task.updated = originUpdateTime;
 	        task.completed = !task.completed;
 	        alert("update task failed");
@@ -14309,19 +14814,17 @@
 	      this.tasks = _lodash2.default.orderBy(this.tasks, sortBy, sortOrder);
 	    },
 	    deleteTodo: function deleteTodo(task) {
-	      var _this3 = this;
+	      var _this2 = this;
 
-	      this.$http.delete(this.backendUri + task._id, function (response) {
+	      this.$http.delete(this.backendUri + task._id).then(function (response) {
 	        task.updated = Date.now();
-	        _this3.tasks.splice(_this3.tasks.indexOf(task), 1);
-	        _this3.setData("todoData", _this3.tasks);
-	      }).error(function (err) {
+	        _this2.tasks.splice(_this2.tasks.indexOf(task), 1);
+	        _this2.setData("todoData", _this2.tasks);
+	      }, function (err) {
 	        alert("delete task failed");
 	      });
 	    },
 	    addTodo: function addTodo() {
-	      var _this4 = this;
-
 	      if (this.newTask.trim().length) {
 	        var task = {
 	          task: this.newTask,
@@ -14330,15 +14833,15 @@
 	          completed: false
 	        };
 
-	        this.$http.post(this.backendUri, task, function (response) {
-	          _this4.tasks.push(task);
-	          _this4.sortTasks(_this4.defaultSortBy, _this4.defaultSortOrder);
-	          _this4.$nextTick(function () {
+	        this.$http.post(this.backendUri, task).then(function (response) {
+	          this.tasks.push(response.data);
+	          this.sortTasks(this.defaultSortBy, this.defaultSortOrder);
+	          this.$nextTick(function () {
 	            new timeago().render(document.querySelectorAll(".timeago"));
 	          });
-	          _this4.newTask = "";
-	          _this4.setData("todoData", _this4.tasks);
-	        }).error(function (err) {
+	          this.newTask = "";
+	          this.setData("todoData", this.tasks);
+	        }, function (response) {
 	          alert("create task failed");
 	        });
 	      } else {
@@ -14368,16 +14871,17 @@
 	      this.initApp();
 	    },
 	    initApp: function initApp() {
-	      var _this5 = this;
-
-	      localStorage.clear();
-	      this.$http.get(this.backendUri, function (data) {
-	        _this5.tasks = data;
-	        _this5.sortTasks(_this5.defaultSortBy, _this5.defaultSortOrder);
-	        _this5.setData("todoData", _this5.tasks);
+	      this.$http.get(this.backendUri).then(function (response) {
+	        this.tasks = JSON.parse(response.body);
+	        this.sortTasks(this.defaultSortBy, this.defaultSortOrder);
+	        this.setData("todoData", this.tasks);
 	        new timeago().render(document.querySelectorAll(".timeago"));
-	      }).error(function (err) {
-	        return console.log(err);
+	      }, function (error) {
+	        if (error.status == 401) {
+	          _auth2.default.logout();
+	        } else {
+	          console.log(error);
+	        }
 	      });
 	    }
 	  },
@@ -14401,73 +14905,31 @@
 	};
 	// </script>
 	//
-	// <template id="todo-list-template">
-	//   <div>
-	//     <input class="form-control input-lg" placeholder="What do you need to do?" v-model="newTask" @keypress.enter="addTodo()">
-	//     <hr>
-	//     <small>
-	//       <i class="fa fa-fw fa-bar-chart"></i>
-	//       <span v-show="!remainingTasks && completedTasks">No Tasks Remaining</span>
-	//       <span v-show="remainingTasks">{{ remainingTasks }} Remaining Task<span v-show="remainingTasks > 1 || remainingTasks === 0">s</span></span>
-	//       <span v-show="totalTasks > 1 && totalTasks > remainingTasks"> of {{ totalTasks }} Total Task<span v-show="totalTasks > 1 || totalTasks === 0">s</span></span>
-	//       <span v-show="!remainingTasks && !completedTasks">No Tasks in List</span>
-	//       <span v-show="completedTasks"> | <a class="text-warning" href="#" @click.prevent="clearCompleted"><i class="fa fa-fw fa-times"></i>Remove Completed Tasks from List</a></span>
-	//       <a class="text-danger pull-right" href="#" @click.prevent="resetApp">Reset to Default Demo Data<i class="fa fa-fw fa-refresh"></i></a>
-	//     </small>
-	//     <hr>
-	//     <ul class="list-group">
-	//       <li class="list-group-item animated flipInX" v-for="todo in tasks" todo="todo">
-	//         <div class="row">
-	//           <div class="col-sm-12">
-	//             <i :class="{ 'fa fa-fw fa-2x fa-circle-o task-check': !todo.completed, 'fa fa-fw fa-2x fa-check-circle-o text-success task-check': todo.completed }" @click="toggleTodoStatus( todo )"></i>
-	//             <span :class="{ 'task-text': !todo.completed, 'task-text task-completed text-success': todo.completed }" @click="toggleTodoStatus( todo )">
-	//               {{ todo.task }}
-	//             </span>
-	//             <button class="btn btn-danger btn-sm pull-right" @click="deleteTodo( todo )"><i class="fa fa-2x fa-minus-circle"></i></button>
-	//           </div>
-	//         </div>
-	//         <div class="row">
-	//           <div class="col-sm-12">
-	//             <small class="priority-meta text-muted">
-	//               Priority:
-	//               <span @click="togglePriority( todo, 3 )" :class="{ 'label label-default priority-label inactive': todo.priority !== 3 , 'label label-info priority-label': todo.priority === 3 }"><i class="fa fa-chevron-down"></i> Low</span>
-	//               <span @click="togglePriority( todo, 2 )" :class="{ 'label label-default priority-label inactive': todo.priority !== 2 , 'label label-primary priority-label': todo.priority === 2 }">Normal</span>
-	//               <span @click="togglePriority( todo, 1 )" :class="{ 'label label-default priority-label inactive': todo.priority !== 1 , 'label label-danger priority-label': todo.priority === 1 }">High <i class="fa fa-chevron-up"></i></span>
-	//               <span v-show="todo.created"><i class="fa fa-clock-o time-created"></i> Added <span class="timeago" :datetime="todo.created">{{ todo.created | timeago }}</span></span>
-	//             </small>
-	//           </div>
-	//         </div>
-	//       </li>
-	//     </ul>
-	//   </div>
-	// </template>
-	//
-	// <script>
 
 /***/ },
-/* 17 */
+/* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = { "default": __webpack_require__(18), __esModule: true };
+	module.exports = { "default": __webpack_require__(11), __esModule: true };
 
 /***/ },
-/* 18 */
+/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var core = __webpack_require__(19);
+	var core = __webpack_require__(12);
 	module.exports = function stringify(it){ // eslint-disable-line no-unused-vars
 	  return (core.JSON && core.JSON.stringify || JSON.stringify).apply(JSON, arguments);
 	};
 
 /***/ },
-/* 19 */
+/* 12 */
 /***/ function(module, exports) {
 
 	var core = module.exports = {version: '1.2.6'};
 	if(typeof __e == 'number')__e = core; // eslint-disable-line no-undef
 
 /***/ },
-/* 20 */
+/* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(global, module) {/**
@@ -31555,10 +32017,10 @@
 	  }
 	}.call(this));
 
-	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(21)(module)))
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(14)(module)))
 
 /***/ },
-/* 21 */
+/* 14 */
 /***/ function(module, exports) {
 
 	module.exports = function(module) {
@@ -31574,24 +32036,73 @@
 
 
 /***/ },
-/* 22 */
-/***/ function(module, exports) {
+/* 15 */
+/***/ function(module, exports, __webpack_require__) {
 
-	module.exports = "\n  <div>\n    <input class=\"form-control input-lg\" placeholder=\"What do you need to do?\" v-model=\"newTask\" @keypress.enter=\"addTodo()\">\n    <hr>\n    <small>\n      <i class=\"fa fa-fw fa-bar-chart\"></i>\n      <span v-show=\"!remainingTasks && completedTasks\">No Tasks Remaining</span>\n      <span v-show=\"remainingTasks\">{{ remainingTasks }} Remaining Task<span v-show=\"remainingTasks > 1 || remainingTasks === 0\">s</span></span>\n      <span v-show=\"totalTasks > 1 && totalTasks > remainingTasks\"> of {{ totalTasks }} Total Task<span v-show=\"totalTasks > 1 || totalTasks === 0\">s</span></span>\n      <span v-show=\"!remainingTasks && !completedTasks\">No Tasks in List</span>\n      <span v-show=\"completedTasks\"> | <a class=\"text-warning\" href=\"#\" @click.prevent=\"clearCompleted\"><i class=\"fa fa-fw fa-times\"></i>Remove Completed Tasks from List</a></span>\n      <a class=\"text-danger pull-right\" href=\"#\" @click.prevent=\"resetApp\">Reset to Default Demo Data<i class=\"fa fa-fw fa-refresh\"></i></a>\n    </small>\n    <hr>\n    <ul class=\"list-group\">\n      <li class=\"list-group-item animated flipInX\" v-for=\"todo in tasks\" todo=\"todo\">\n        <div class=\"row\">\n          <div class=\"col-sm-12\">\n            <i :class=\"{ 'fa fa-fw fa-2x fa-circle-o task-check': !todo.completed, 'fa fa-fw fa-2x fa-check-circle-o text-success task-check': todo.completed }\" @click=\"toggleTodoStatus( todo )\"></i>\n            <span :class=\"{ 'task-text': !todo.completed, 'task-text task-completed text-success': todo.completed }\" @click=\"toggleTodoStatus( todo )\">\n              {{ todo.task }}\n            </span>\n            <button class=\"btn btn-danger btn-sm pull-right\" @click=\"deleteTodo( todo )\"><i class=\"fa fa-2x fa-minus-circle\"></i></button>\n          </div>\n        </div>\n        <div class=\"row\">\n          <div class=\"col-sm-12\">\n            <small class=\"priority-meta text-muted\">\n              Priority:\n              <span @click=\"togglePriority( todo, 3 )\" :class=\"{ 'label label-default priority-label inactive': todo.priority !== 3 , 'label label-info priority-label': todo.priority === 3 }\"><i class=\"fa fa-chevron-down\"></i> Low</span>\n              <span @click=\"togglePriority( todo, 2 )\" :class=\"{ 'label label-default priority-label inactive': todo.priority !== 2 , 'label label-primary priority-label': todo.priority === 2 }\">Normal</span>\n              <span @click=\"togglePriority( todo, 1 )\" :class=\"{ 'label label-default priority-label inactive': todo.priority !== 1 , 'label label-danger priority-label': todo.priority === 1 }\">High <i class=\"fa fa-chevron-up\"></i></span>\n              <span v-show=\"todo.created\"><i class=\"fa fa-clock-o time-created\"></i> Added <span class=\"timeago\" :datetime=\"todo.created\">{{ todo.created | timeago }}</span></span>\n            </small>\n          </div>\n        </div>\n      </li>\n    </ul>\n  </div>\n";
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _index = __webpack_require__(1);
+
+	var API_URL = "https://immense-hamlet-88968.herokuapp.com/authentication";
+
+	exports.default = {
+
+	  user: {
+	    authenticated: false
+	  },
+
+	  login: function login(context, creds, redirect) {
+	    var _this = this;
+
+	    context.$http.post(API_URL, creds).then(function (data) {
+	      localStorage.setItem('id_token', data.id_token);
+
+	      _this.user.authenticated = true;
+
+	      if (redirect) {
+	        _index.router.go(redirect);
+	      }
+	    }, function (err) {
+	      context.error = err;
+	    });
+	  },
+	  checkAuth: function checkAuth() {
+	    var jwt = localStorage.getItem('id_token');
+	    if (jwt) {
+	      this.user.authenticated = true;
+	    } else {
+	      this.user.authenticated = false;
+	    }
+	  },
+	  logout: function logout() {
+	    localStorage.removeItem('id_token');
+	    this.user.authenticated = false;
+	  }
+	};
 
 /***/ },
-/* 23 */
+/* 16 */
 /***/ function(module, exports) {
 
-	module.exports = "\n    <div class=\"container\">\n      <div class=\"container page-header\">\n        <h1>Simple Vue.js To-do List App</h1>\n        <p class=\"lead\">\n          Type text below and hit enter key to add new tasks. Click priority label on task to change it. Tasks sort by priority and when created.\n          <br>\n          <small> Demo uses browser's local storage - task list will persist between visits unless browser's cache is cleared.</small>\n        </p>\n      </div>\n      <div class=\"row\">\n        <div class=\"col-sm-12\">\n          <todo-list></todo-list>\n        </div>\n      </div>\n    </div>\n";
+	module.exports = "\r\n  <div>\r\n    <input class=\"form-control input-lg\" placeholder=\"What do you need to do?\" v-model=\"newTask\" @keypress.enter=\"addTodo()\">\r\n    <hr>\r\n    <small>\r\n      <i class=\"fa fa-fw fa-bar-chart\"></i>\r\n      <span v-show=\"!remainingTasks && completedTasks\">No Tasks Remaining</span>\r\n      <span v-show=\"remainingTasks\">{{ remainingTasks }} Remaining Task<span v-show=\"remainingTasks > 1 || remainingTasks === 0\">s</span></span>\r\n      <span v-show=\"totalTasks > 1 && totalTasks > remainingTasks\"> of {{ totalTasks }} Total Task<span v-show=\"totalTasks > 1 || totalTasks === 0\">s</span></span>\r\n      <span v-show=\"!remainingTasks && !completedTasks\">No Tasks in List</span>\r\n      <span v-show=\"completedTasks\"> | <a class=\"text-warning\" href=\"#\" @click.prevent=\"clearCompleted\"><i class=\"fa fa-fw fa-times\"></i>Remove Completed Tasks from List</a></span>\r\n      <a class=\"text-danger pull-right\" href=\"#\" @click.prevent=\"resetApp\">Reset to Default Demo Data<i class=\"fa fa-fw fa-refresh\"></i></a>\r\n    </small>\r\n    <hr>\r\n    <ul class=\"list-group\">\r\n      <li class=\"list-group-item animated flipInX\" v-for=\"todo in tasks\">\r\n        <div class=\"row\">\r\n          <div class=\"col-sm-12\">\r\n            <i :class=\"{ 'fa fa-fw fa-2x fa-circle-o task-check': !todo.completed, 'fa fa-fw fa-2x fa-check-circle-o text-success task-check': todo.completed }\" @click=\"toggleTodoStatus( todo )\"></i>\r\n            <span :class=\"{ 'task-text': !todo.completed, 'task-text task-completed text-success': todo.completed }\" @click=\"toggleTodoStatus( todo )\">\r\n              {{ todo.task }}\r\n            </span>\r\n            <button class=\"btn btn-danger btn-sm pull-right\" @click=\"deleteTodo( todo )\"><i class=\"fa fa-2x fa-minus-circle\"></i></button>\r\n          </div>\r\n        </div>\r\n        <div class=\"row\">\r\n          <div class=\"col-sm-12\">\r\n            <small class=\"priority-meta text-muted\">\r\n              Priority:\r\n              <span @click=\"togglePriority( todo, 3 )\" :class=\"{ 'label label-default priority-label inactive': todo.priority !== 3 , 'label label-info priority-label': todo.priority === 3 }\"><i class=\"fa fa-chevron-down\"></i> Low</span>\r\n              <span @click=\"togglePriority( todo, 2 )\" :class=\"{ 'label label-default priority-label inactive': todo.priority !== 2 , 'label label-primary priority-label': todo.priority === 2 }\">Normal</span>\r\n              <span @click=\"togglePriority( todo, 1 )\" :class=\"{ 'label label-default priority-label inactive': todo.priority !== 1 , 'label label-danger priority-label': todo.priority === 1 }\">High <i class=\"fa fa-chevron-up\"></i></span>\r\n              <span v-show=\"todo.created\"><i class=\"fa fa-clock-o time-created\"></i> Added <span class=\"timeago\" :datetime=\"todo.created\">{{ todo.created | timeago }}</span></span>\r\n            </small>\r\n          </div>\r\n        </div>\r\n      </li>\r\n    </ul>\r\n  </div>\r\n";
 
 /***/ },
-/* 24 */
+/* 17 */
+/***/ function(module, exports) {
+
+	module.exports = "\n    <div class=\"container\">\n      <div class=\"page-header\">\n        <h1>Simple Vue.js To-do List App</h1>\n        <p class=\"lead\">\n          Type text below and hit enter key to add new tasks. Click priority label on task to change it. Tasks sort by priority and when created.\n          <br>\n          <small> Demo uses browser's local storage - task list will persist between visits unless browser's cache is cleared.</small>\n        </p>\n      </div>\n      <div class=\"container\" v-if=\"!user.authenticated\">\n        <h2>\n          Not Login yet. Please <a v-link=\"'login'\">Login in</a>.\n        </h2>\n      </div>\n      <div class=\"row\" v-if=\"user.authenticated\">\n        <div class=\"col-sm-12\">\n          <todo-list></todo-list>\n        </div>\n      </div>\n    </div>\n";
+
+/***/ },
+/* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __vue_script__, __vue_template__
-	__vue_script__ = __webpack_require__(25)
-	__vue_template__ = __webpack_require__(26)
+	__vue_script__ = __webpack_require__(19)
+	__vue_template__ = __webpack_require__(20)
 	module.exports = __vue_script__ || {}
 	if (module.exports.__esModule) module.exports = module.exports.default
 	if (__vue_template__) { (typeof module.exports === "function" ? module.exports.options : module.exports).template = __vue_template__ }
@@ -31608,55 +32119,186 @@
 	})()}
 
 /***/ },
-/* 25 */
-/***/ function(module, exports) {
+/* 19 */
+/***/ function(module, exports, __webpack_require__) {
 
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _auth = __webpack_require__(15);
+
+	var _auth2 = _interopRequireDefault(_auth);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	exports.default = {
+	  data: function data() {
+	    return {
+	      user: _auth2.default.user
+	    };
+	  },
+
+
+	  methods: {
+	    logout: function logout() {
+	      _auth2.default.logout();
+	    }
+	  }
+	};
+	// </script>
+	//
 	// <template>
 	//   <div class="container">
-	//     <nav class="navbar navbar-default">
-	//       <div class="container-fluid">
-	//         <!-- Brand and toggle get grouped for better mobile display -->
-	//         <div class="navbar-header">
-	//           <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
-	//             <span class="sr-only">Toggle navigation</span>
-	//             <span class="icon-bar"></span>
-	//             <span class="icon-bar"></span>
-	//             <span class="icon-bar"></span>
-	//           </button>
-	//           <a class="navbar-brand" href="#">MuchContact</a>
-	//         </div>
+	//     <div class="container">
+	//         <nav class="navbar navbar-default" style="background-color: transparent">
+	//           <div class="container-fluid">
+	//             <!-- Brand and toggle get grouped for better mobile display -->
+	//             <div class="navbar-header">
+	//               <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+	//                 <span class="sr-only">Toggle navigation</span>
+	//                 <span class="icon-bar"></span>
+	//                 <span class="icon-bar"></span>
+	//                 <span class="icon-bar"></span>
+	//               </button>
+	//               <a class="navbar-brand" href="#">MuchContact</a>
+	//             </div>
 	//
-	//         <!-- Collect the nav links, forms, and other content for toggling -->
-	//         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-	//           <ul class="nav navbar-nav navbar-right">
-	//             <li><a href="#">Login</a></li>
-	//             <li><a href="#">Sign up</a></li>
-	//             <li class="dropdown">
-	//               <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Username<span class="caret"></span></a>
-	//               <ul class="dropdown-menu">
-	//                 <li><a href="#">Profile</a></li>
-	//                 <li><a href="#">Logout</a></li>
+	//             <!-- Collect the nav links, forms, and other content for toggling -->
+	//             <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+	//               <ul class="nav navbar-nav navbar-right">
+	//                 <li><a v-link="'home'">Home</a></li>
+	//                 <li><a v-link="'login'" v-if="!user.authenticated">Login</a></li>
+	//                 <li><a v-link="'signup'" v-if="!user.authenticated">Sign up</a></li>
+	//                 <li class="dropdown" v-if="user.authenticated">
+	//                   <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Username<span class="caret"></span></a>
+	//                   <ul class="dropdown-menu">
+	//                     <li><a href="#">Profile</a></li>
+	//                     <li><a href="#" @click="logout()">Logout</a></li>
+	//                   </ul>
+	//                 </li>
 	//               </ul>
-	//             </li>
-	//           </ul>
-	//         </div><!-- /.navbar-collapse -->
-	//       </div><!-- /.container-fluid -->
-	//     </nav>
+	//             </div><!-- /.navbar-collapse -->
+	//           </div><!-- /.container-fluid -->
+	//         </nav>
+	//      </div>
 	//     <router-view></router-view>
 	//   </div>
 	// </template>
 	//
 	// <script>
 
-	// </script>
-	//
-	"use strict";
-
 /***/ },
-/* 26 */
+/* 20 */
 /***/ function(module, exports) {
 
-	module.exports = "\n  <div class=\"container\">\n    <nav class=\"navbar navbar-default\">\n      <div class=\"container-fluid\">\n        <!-- Brand and toggle get grouped for better mobile display -->\n        <div class=\"navbar-header\">\n          <button type=\"button\" class=\"navbar-toggle collapsed\" data-toggle=\"collapse\" data-target=\"#bs-example-navbar-collapse-1\" aria-expanded=\"false\">\n            <span class=\"sr-only\">Toggle navigation</span>\n            <span class=\"icon-bar\"></span>\n            <span class=\"icon-bar\"></span>\n            <span class=\"icon-bar\"></span>\n          </button>\n          <a class=\"navbar-brand\" href=\"#\">MuchContact</a>\n        </div>\n\n        <!-- Collect the nav links, forms, and other content for toggling -->\n        <div class=\"collapse navbar-collapse\" id=\"bs-example-navbar-collapse-1\">\n          <ul class=\"nav navbar-nav navbar-right\">\n            <li><a href=\"#\">Login</a></li>\n            <li><a href=\"#\">Sign up</a></li>\n            <li class=\"dropdown\">\n              <a href=\"#\" class=\"dropdown-toggle\" data-toggle=\"dropdown\" role=\"button\" aria-haspopup=\"true\" aria-expanded=\"false\">Username<span class=\"caret\"></span></a>\n              <ul class=\"dropdown-menu\">\n                <li><a href=\"#\">Profile</a></li>\n                <li><a href=\"#\">Logout</a></li>\n              </ul>\n            </li>\n          </ul>\n        </div><!-- /.navbar-collapse -->\n      </div><!-- /.container-fluid -->\n    </nav>\n    <router-view></router-view>\n  </div>\n";
+	module.exports = "\n  <div class=\"container\">\n    <div class=\"container\">\n        <nav class=\"navbar navbar-default\" style=\"background-color: transparent\">\n          <div class=\"container-fluid\">\n            <!-- Brand and toggle get grouped for better mobile display -->\n            <div class=\"navbar-header\">\n              <button type=\"button\" class=\"navbar-toggle collapsed\" data-toggle=\"collapse\" data-target=\"#bs-example-navbar-collapse-1\" aria-expanded=\"false\">\n                <span class=\"sr-only\">Toggle navigation</span>\n                <span class=\"icon-bar\"></span>\n                <span class=\"icon-bar\"></span>\n                <span class=\"icon-bar\"></span>\n              </button>\n              <a class=\"navbar-brand\" href=\"#\">MuchContact</a>\n            </div>\n\n            <!-- Collect the nav links, forms, and other content for toggling -->\n            <div class=\"collapse navbar-collapse\" id=\"bs-example-navbar-collapse-1\">\n              <ul class=\"nav navbar-nav navbar-right\">\n                <li><a v-link=\"'home'\">Home</a></li>\n                <li><a v-link=\"'login'\" v-if=\"!user.authenticated\">Login</a></li>\n                <li><a v-link=\"'signup'\" v-if=\"!user.authenticated\">Sign up</a></li>\n                <li class=\"dropdown\" v-if=\"user.authenticated\">\n                  <a href=\"#\" class=\"dropdown-toggle\" data-toggle=\"dropdown\" role=\"button\" aria-haspopup=\"true\" aria-expanded=\"false\">Username<span class=\"caret\"></span></a>\n                  <ul class=\"dropdown-menu\">\n                    <li><a href=\"#\">Profile</a></li>\n                    <li><a href=\"#\" @click=\"logout()\">Logout</a></li>\n                  </ul>\n                </li>\n              </ul>\n            </div><!-- /.navbar-collapse -->\n          </div><!-- /.container-fluid -->\n        </nav>\n     </div>\n    <router-view></router-view>\n  </div>\n";
+
+/***/ },
+/* 21 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __vue_script__, __vue_template__
+	__vue_script__ = __webpack_require__(22)
+	__vue_template__ = __webpack_require__(23)
+	module.exports = __vue_script__ || {}
+	if (module.exports.__esModule) module.exports = module.exports.default
+	if (__vue_template__) { (typeof module.exports === "function" ? module.exports.options : module.exports).template = __vue_template__ }
+	if (false) {(function () {  module.hot.accept()
+	  var hotAPI = require("vue-hot-reload-api")
+	  hotAPI.install(require("vue"), true)
+	  if (!hotAPI.compatible) return
+	  var id = "/Users/muco/Workspaces/JsWs/vuejs-todo-list/public/assets/js/components/Login.vue"
+	  if (!module.hot.data) {
+	    hotAPI.createRecord(id, module.exports)
+	  } else {
+	    hotAPI.update(id, module.exports, __vue_template__)
+	  }
+	})()}
+
+/***/ },
+/* 22 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _auth = __webpack_require__(15);
+
+	var _auth2 = _interopRequireDefault(_auth);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	exports.default = {
+	  data: function data() {
+	    return {
+	      credentials: {
+	        username: '',
+	        password: ''
+	      },
+	      error: ''
+	    };
+	  },
+
+
+	  methods: {
+	    submit: function submit() {
+
+	      var credentials = {
+	        user: {
+	          name: this.credentials.username,
+	          password: this.credentials.password
+	        }
+	      };
+
+	      _auth2.default.login(this, credentials, 'home');
+	    }
+	  }
+
+	};
+	// </script>
+	//
+	// <template>
+	//   <div class="col-sm-4 col-sm-offset-4">
+	//     <h2>Log In</h2>
+	//     <p>Log in to your account to get some great quotes.</p>
+	//     <div class="alert alert-danger" v-if="error">
+	//       <p>{{ error }}</p>
+	//     </div>
+	//     <div class="form-group">
+	//       <input
+	//         type="text"
+	//         class="form-control"
+	//         placeholder="Enter your username"
+	//         v-model="credentials.username"
+	//         @keyup.enter="submit()"
+	//       >
+	//     </div>
+	//     <div class="form-group">
+	//       <input
+	//         type="password"
+	//         class="form-control"
+	//         placeholder="Enter your password"
+	//         v-model="credentials.password"
+	//         @keyup.enter="submit()"
+	//       >
+	//     </div>
+	//     <button class="btn btn-primary" @click="submit()">Access</button>
+	//   </div>
+	// </template>
+	//
+	// <script>
+
+/***/ },
+/* 23 */
+/***/ function(module, exports) {
+
+	module.exports = "\n  <div class=\"col-sm-4 col-sm-offset-4\">\n    <h2>Log In</h2>\n    <p>Log in to your account to get some great quotes.</p>\n    <div class=\"alert alert-danger\" v-if=\"error\">\n      <p>{{ error }}</p>\n    </div>\n    <div class=\"form-group\">\n      <input\n        type=\"text\"\n        class=\"form-control\"\n        placeholder=\"Enter your username\"\n        v-model=\"credentials.username\"\n        @keyup.enter=\"submit()\"\n      >\n    </div>\n    <div class=\"form-group\">\n      <input\n        type=\"password\"\n        class=\"form-control\"\n        placeholder=\"Enter your password\"\n        v-model=\"credentials.password\"\n        @keyup.enter=\"submit()\"\n      >\n    </div>\n    <button class=\"btn btn-primary\" @click=\"submit()\">Access</button>\n  </div>\n";
 
 /***/ }
 /******/ ]);
