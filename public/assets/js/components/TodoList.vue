@@ -13,7 +13,7 @@
     </small>
     <hr>
     <ul class="list-group">
-      <li class="list-group-item animated flipInX" v-for="todo in tasks" todo="todo">
+      <li class="list-group-item animated flipInX" v-for="todo in tasks">
         <div class="row">
           <div class="col-sm-12">
             <i :class="{ 'fa fa-fw fa-2x fa-circle-o task-check': !todo.completed, 'fa fa-fw fa-2x fa-check-circle-o text-success task-check': todo.completed }" @click="toggleTodoStatus( todo )"></i>
@@ -114,7 +114,7 @@ export default {
           };
 
           this.$http.post(this.backendUri, task).then(function (response) {
-            this.tasks.push(task);
+            this.tasks.push(response.data);
             this.sortTasks(this.defaultSortBy, this.defaultSortOrder);
             this.$nextTick(function () {
               new timeago().render(document.querySelectorAll(".timeago"));
