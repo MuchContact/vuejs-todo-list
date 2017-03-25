@@ -11,6 +11,7 @@
         class="form-control"
         placeholder="Enter your username"
         v-model="credentials.username"
+        @keyup.enter="submit()"
       >
     </div>
     <div class="form-group">
@@ -19,6 +20,7 @@
         class="form-control"
         placeholder="Enter your password"
         v-model="credentials.password"
+        @keyup.enter="submit()"
       >
     </div>
     <button class="btn btn-primary" @click="submit()">Access</button>
