@@ -26,16 +26,21 @@ import Vue from 'vue'
 import TODO from './TodoList.vue'
 import auth from '../auth'
 
-Vue.component("todo-list", TODO);
-
 export default {
   data() {
     return {
       user: auth.user
     }
   },
-
+  created: function () {
+    this.initApp();
+  },
   methods: {
+    initApp: function () {
+        if(this.user.authenticated) {
+          Vue.component("todo-list", TODO);
+        }
+    }
   }
 }
 </script>

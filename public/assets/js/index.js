@@ -13,6 +13,11 @@ Vue.filter("timeago", function (date) {
   return new timeago().format(date);
 });
 
+Vue.http.interceptors.push((request, next) => {
+  request.credentials = true
+  next()
+})
+
 auth.checkAuth()
 
 export var router = new VueRouter()

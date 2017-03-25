@@ -8,19 +8,18 @@ export default {
   },
 
   login(context, creds, redirect) {
-    context.$http.post(API_URL, creds, (data) => {
+    context.$http.post(API_URL, creds).then((data) => {
       localStorage.setItem('id_token', data.id_token)
 
       this.user.authenticated = true
 
       if (redirect) {
-        console.log(redirect)
         router.go(redirect)
       }
-
-    }).error((err) => {
+    }, (err) => {
       context.error = err
-    })
+    });
+
   },
 
   checkAuth() {
