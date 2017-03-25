@@ -1,6 +1,6 @@
 <template>
     <div class="container">
-      <div class="container page-header">
+      <div class="page-header">
         <h1>Simple Vue.js To-do List App</h1>
         <p class="lead">
           Type text below and hit enter key to add new tasks. Click priority label on task to change it. Tasks sort by priority and when created.
