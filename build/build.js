@@ -32079,8 +32079,8 @@
 	  login: function login(context, creds, redirect) {
 	    var _this = this;
 
-	    context.$http.post(API_URL, creds).then(function (data) {
-	      localStorage.setItem('id_token', data.id_token);
+	    context.$http.post(API_URL, creds).then(function (response) {
+	      localStorage.setItem('id_token', response.data.id_token);
 
 	      _this.user.authenticated = true;
 
