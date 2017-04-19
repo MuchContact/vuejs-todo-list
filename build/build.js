@@ -14730,6 +14730,7 @@
 	      backendUri: "https://immense-hamlet-88968.herokuapp.com/todos/",
 	      newTask: "",
 	      tasks: [],
+	      currentDay: (0, _moment2.default)().startOf('day'),
 	      defaultSortBy: ["priority", "created"],
 	      defaultSortOrder: ["asc", "desc"],
 	      defaultTaskPriority: 2 // 1: high, 2: normal. 3: low
@@ -14742,6 +14743,14 @@
 	    new timeago().render(document.querySelectorAll(".timeago"));
 	  },
 	  methods: {
+	    previous: function previous() {
+	      this.currentDay = (0, _moment2.default)(this.currentDay).subtract(1, 'days');
+	      this.resetApp();
+	    },
+	    next: function next() {
+	      this.currentDay = (0, _moment2.default)(this.currentDay).add(1, 'days');
+	      this.resetApp();
+	    },
 	    togglePriority: function togglePriority(task, priority) {
 	      var originUpdateTime = task.updated;
 	      var originPriority = task.priority;
@@ -14833,7 +14842,7 @@
 	      this.initApp();
 	    },
 	    initApp: function initApp() {
-	      var start = (0, _moment2.default)().startOf('day');
+	      var start = this.currentDay;
 	      var end = (0, _moment2.default)(start).add(1, 'days');
 	      this.$http.get(this.backendUri, { params: { from: start.utc().format(), to: end.utc().format() } }).then(function (response) {
 	        this.tasks = JSON.parse(response.body);
@@ -14842,6 +14851,7 @@
 	        new timeago().render(document.querySelectorAll(".timeago"));
 	      }, function (error) {
 	        if (error.status == 401) {
+	          console.log("logout in [TodoList.vue_initApp]");
 	          _auth2.default.logout();
 	        } else {
 	          console.log(error);
@@ -14864,6 +14874,12 @@
 	      if (this.tasks) {
 	        return this.tasks.length;
 	      }
+	    },
+	    hasNext: function hasNext() {
+	      return this.currentDay.isBefore((0, _moment2.default)().startOf('day'));
+	    },
+	    currentDayTip: function currentDayTip() {
+	      return this.currentDay.local().format('YYYY-MM-DD');
 	    }
 	  }
 	};
@@ -14888,6 +14904,13 @@
 	//         class="fa fa-fw fa-refresh"></i></a>
 	//     </small>
 	//     <hr>
+	//     <nav aria-label="...">
+	//       <ul class="pager">
+	//         <li class="previous"><a href="#" @click="previous()"><span aria-hidden="true">&larr;</span> Older</a></li>
+	//         <li class=""><span>{{ currentDayTip }}</span></li>
+	//         <li :class="['next', {'disabled': !hasNext}]"><a href="#" @click="next()">Newer <span aria-hidden="true">&rarr;</span></a></li>
+	//       </ul>
+	//     </nav>
 	//     <ul class="list-group">
 	//       <li class="list-group-item animated flipInX" v-for="todo in tasks">
 	//         <div class="row">
@@ -47909,7 +47932,7 @@
 /* 133 */
 /***/ function(module, exports) {
 
-	module.exports = "\r\n  <div>\r\n    <input class=\"form-control input-lg\" placeholder=\"What do you need to do?\" v-model=\"newTask\"\r\n           @keypress.enter=\"addTodo()\">\r\n    <hr>\r\n    <small>\r\n      <i class=\"fa fa-fw fa-bar-chart\"></i>\r\n      <span v-show=\"!remainingTasks && completedTasks\">No Tasks Remaining</span>\r\n      <span v-show=\"remainingTasks\">{{ remainingTasks }} Remaining Task<span\r\n        v-show=\"remainingTasks > 1 || remainingTasks === 0\">s</span></span>\r\n      <span v-show=\"totalTasks > 1 && totalTasks > remainingTasks\"> of {{ totalTasks }} Total Task<span\r\n        v-show=\"totalTasks > 1 || totalTasks === 0\">s</span></span>\r\n      <span v-show=\"!remainingTasks && !completedTasks\">No Tasks in List</span>\r\n      <span v-show=\"completedTasks\"> | <a class=\"text-warning\" href=\"#\" @click.prevent=\"clearCompleted\"><i\r\n        class=\"fa fa-fw fa-times\"></i>Remove Completed Tasks from List</a></span>\r\n      <a class=\"text-danger pull-right\" href=\"#\" @click.prevent=\"resetApp\">Reset to Default Demo Data<i\r\n        class=\"fa fa-fw fa-refresh\"></i></a>\r\n    </small>\r\n    <hr>\r\n    <ul class=\"list-group\">\r\n      <li class=\"list-group-item animated flipInX\" v-for=\"todo in tasks\">\r\n        <div class=\"row\">\r\n          <div class=\"col-sm-12\">\r\n            <i\r\n              :class=\"{ 'fa fa-fw fa-2x fa-circle-o task-check': !todo.completed, 'fa fa-fw fa-2x fa-check-circle-o text-success task-check': todo.completed }\"\r\n              @click=\"toggleTodoStatus( todo )\"></i>\r\n            <span :class=\"{ 'task-text': !todo.completed, 'task-text task-completed text-success': todo.completed }\"\r\n                  @click=\"toggleTodoStatus( todo )\">\r\n              {{ todo.task }}\r\n            </span>\r\n            <button class=\"btn btn-danger btn-sm pull-right\" @click=\"deleteTodo( todo )\"><i\r\n              class=\"fa fa-2x fa-minus-circle\"></i></button>\r\n          </div>\r\n        </div>\r\n        <div class=\"row\">\r\n          <div class=\"col-sm-12\">\r\n            <small class=\"priority-meta text-muted\">\r\n              Priority:\r\n              <span @click=\"togglePriority( todo, 3 )\"\r\n                    :class=\"{ 'label label-default priority-label inactive': todo.priority !== 3 , 'label label-info priority-label': todo.priority === 3 }\"><i\r\n                class=\"fa fa-chevron-down\"></i> Low</span>\r\n              <span @click=\"togglePriority( todo, 2 )\"\r\n                    :class=\"{ 'label label-default priority-label inactive': todo.priority !== 2 , 'label label-primary priority-label': todo.priority === 2 }\">Normal</span>\r\n              <span @click=\"togglePriority( todo, 1 )\"\r\n                    :class=\"{ 'label label-default priority-label inactive': todo.priority !== 1 , 'label label-danger priority-label': todo.priority === 1 }\">High <i\r\n                class=\"fa fa-chevron-up\"></i></span>\r\n              <span v-show=\"todo.created\"><i class=\"fa fa-clock-o time-created\"></i> Added <span class=\"timeago\"\r\n                                                                                                 :datetime=\"todo.created\">{{ todo.created | timeago }}</span></span>\r\n            </small>\r\n          </div>\r\n        </div>\r\n      </li>\r\n    </ul>\r\n  </div>\r\n";
+	module.exports = "\r\n  <div>\r\n    <input class=\"form-control input-lg\" placeholder=\"What do you need to do?\" v-model=\"newTask\"\r\n           @keypress.enter=\"addTodo()\">\r\n    <hr>\r\n    <small>\r\n      <i class=\"fa fa-fw fa-bar-chart\"></i>\r\n      <span v-show=\"!remainingTasks && completedTasks\">No Tasks Remaining</span>\r\n      <span v-show=\"remainingTasks\">{{ remainingTasks }} Remaining Task<span\r\n        v-show=\"remainingTasks > 1 || remainingTasks === 0\">s</span></span>\r\n      <span v-show=\"totalTasks > 1 && totalTasks > remainingTasks\"> of {{ totalTasks }} Total Task<span\r\n        v-show=\"totalTasks > 1 || totalTasks === 0\">s</span></span>\r\n      <span v-show=\"!remainingTasks && !completedTasks\">No Tasks in List</span>\r\n      <span v-show=\"completedTasks\"> | <a class=\"text-warning\" href=\"#\" @click.prevent=\"clearCompleted\"><i\r\n        class=\"fa fa-fw fa-times\"></i>Remove Completed Tasks from List</a></span>\r\n      <a class=\"text-danger pull-right\" href=\"#\" @click.prevent=\"resetApp\">Reset to Default Demo Data<i\r\n        class=\"fa fa-fw fa-refresh\"></i></a>\r\n    </small>\r\n    <hr>\r\n    <nav aria-label=\"...\">\r\n      <ul class=\"pager\">\r\n        <li class=\"previous\"><a href=\"#\" @click=\"previous()\"><span aria-hidden=\"true\">&larr;</span> Older</a></li>\r\n        <li class=\"\"><span>{{ currentDayTip }}</span></li>\r\n        <li :class=\"['next', {'disabled': !hasNext}]\"><a href=\"#\" @click=\"next()\">Newer <span aria-hidden=\"true\">&rarr;</span></a></li>\r\n      </ul>\r\n    </nav>\r\n    <ul class=\"list-group\">\r\n      <li class=\"list-group-item animated flipInX\" v-for=\"todo in tasks\">\r\n        <div class=\"row\">\r\n          <div class=\"col-sm-12\">\r\n            <i\r\n              :class=\"{ 'fa fa-fw fa-2x fa-circle-o task-check': !todo.completed, 'fa fa-fw fa-2x fa-check-circle-o text-success task-check': todo.completed }\"\r\n              @click=\"toggleTodoStatus( todo )\"></i>\r\n            <span :class=\"{ 'task-text': !todo.completed, 'task-text task-completed text-success': todo.completed }\"\r\n                  @click=\"toggleTodoStatus( todo )\">\r\n              {{ todo.task }}\r\n            </span>\r\n            <button class=\"btn btn-danger btn-sm pull-right\" @click=\"deleteTodo( todo )\"><i\r\n              class=\"fa fa-2x fa-minus-circle\"></i></button>\r\n          </div>\r\n        </div>\r\n        <div class=\"row\">\r\n          <div class=\"col-sm-12\">\r\n            <small class=\"priority-meta text-muted\">\r\n              Priority:\r\n              <span @click=\"togglePriority( todo, 3 )\"\r\n                    :class=\"{ 'label label-default priority-label inactive': todo.priority !== 3 , 'label label-info priority-label': todo.priority === 3 }\"><i\r\n                class=\"fa fa-chevron-down\"></i> Low</span>\r\n              <span @click=\"togglePriority( todo, 2 )\"\r\n                    :class=\"{ 'label label-default priority-label inactive': todo.priority !== 2 , 'label label-primary priority-label': todo.priority === 2 }\">Normal</span>\r\n              <span @click=\"togglePriority( todo, 1 )\"\r\n                    :class=\"{ 'label label-default priority-label inactive': todo.priority !== 1 , 'label label-danger priority-label': todo.priority === 1 }\">High <i\r\n                class=\"fa fa-chevron-up\"></i></span>\r\n              <span v-show=\"todo.created\"><i class=\"fa fa-clock-o time-created\"></i> Added <span class=\"timeago\"\r\n                                                                                                 :datetime=\"todo.created\">{{ todo.created | timeago }}</span></span>\r\n            </small>\r\n          </div>\r\n        </div>\r\n      </li>\r\n    </ul>\r\n  </div>\r\n";
 
 /***/ },
 /* 134 */
